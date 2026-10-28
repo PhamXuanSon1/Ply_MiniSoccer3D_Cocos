@@ -41,12 +41,12 @@
       "userData": {
         "trimThreshold": 1,
         "rotated": false,
-        "offsetX": 0.5,
-        "offsetY": -11,
-        "trimX": 92,
-        "trimY": 28,
-        "width": 329,
-        "height": 478,
+        "offsetX": 0,
+        "offsetY": 0,
+        "trimX": 0,
+        "trimY": 0,
+        "width": 512,
+        "height": 512,
         "rawWidth": 512,
         "rawHeight": 512,
         "borderTop": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -164.5,
-            -239,
+            -256,
+            -256,
             0,
-            164.5,
-            -239,
+            256,
+            -256,
             0,
-            -164.5,
-            239,
+            -256,
+            256,
             0,
-            164.5,
-            239,
+            256,
+            256,
             0
           ],
           "indexes": [
@@ -82,40 +82,40 @@
             3
           ],
           "uv": [
-            92,
-            484,
-            421,
-            484,
-            92,
-            6,
-            421,
-            6
+            0,
+            512,
+            512,
+            512,
+            0,
+            0,
+            512,
+            0
           ],
           "nuv": [
-            0.1796875,
-            0.01171875,
-            0.822265625,
-            0.01171875,
-            0.1796875,
-            0.9453125,
-            0.822265625,
-            0.9453125
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1
           ],
           "minPos": [
-            -164.5,
-            -239,
+            -256,
+            -256,
             0
           ],
           "maxPos": [
-            164.5,
-            239,
+            256,
+            256,
             0
           ]
         },
         "isUuid": true,
         "imageUuidOrDatabaseUri": "a1648d93-30db-494c-958f-35c3d8940fda@6c48a",
         "atlasUuid": "",
-        "trimType": "auto"
+        "trimType": "none"
       },
       "ver": "1.0.12",
       "imported": true,

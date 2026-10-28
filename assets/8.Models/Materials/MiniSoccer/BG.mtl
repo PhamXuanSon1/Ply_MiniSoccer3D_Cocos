@@ -28,13 +28,13 @@
   "_props": [
     {
       "mainTexture": {
-        "__uuid__": "1fed4894-6b13-4746-b300-57bf8efe61f5@6c48a",
+        "__uuid__": "bf391f50-a48d-4432-96fc-b3004e3d7d35@6c48a",
         "__expectedType__": "cc.Texture2D"
       },
       "tilingOffset": {
         "__type__": "cc.Vec4",
-        "x": 3,
-        "y": 1.5,
+        "x": 10.66,
+        "y": 10.41,
         "z": 0.767838,
         "w": 0.767838
       }

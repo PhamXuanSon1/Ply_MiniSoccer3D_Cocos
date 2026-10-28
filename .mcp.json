@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "cocos-ply-minisocc-e27596": {
+      "type": "http",
+      "url": "http://127.0.0.1:27060/"
+    },
+    "UnityMCP": {
+      "type": "stdio",
+      "command": "C:\Users\Admin\.local\bin\uvx.exe",
+      "args": ["--from", "mcpforunityserver==10.0.0", "mcp-for-unity", "--transport", "stdio"]
+    }
+  }
+}

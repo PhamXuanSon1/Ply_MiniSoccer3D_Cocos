@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "f0042c91-5e14-4232-a661-a04c7087ec06",
+  "uuid": "45a03e9d-66a0-4878-ba21-59a67a01b5aa",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "f0042c91-5e14-4232-a661-a04c7087ec06@6c48a",
+      "uuid": "45a03e9d-66a0-4878-ba21-59a67a01b5aa@6c48a",
       "displayName": "Glow_BlurBurst",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "f0042c91-5e14-4232-a661-a04c7087ec06",
+        "imageUuidOrDatabaseUri": "45a03e9d-66a0-4878-ba21-59a67a01b5aa",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,7 +34,7 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "f0042c91-5e14-4232-a661-a04c7087ec06@f9941",
+      "uuid": "45a03e9d-66a0-4878-ba21-59a67a01b5aa@f9941",
       "displayName": "Glow_BlurBurst",
       "id": "f9941",
       "name": "spriteFrame",
@@ -45,10 +45,10 @@
         "offsetY": 0,
         "trimX": 0,
         "trimY": 0,
-        "width": 512,
-        "height": 512,
-        "rawWidth": 512,
-        "rawHeight": 512,
+        "width": 768,
+        "height": 1152,
+        "rawWidth": 768,
+        "rawHeight": 1152,
         "borderTop": 0,
         "borderBottom": 0,
         "borderLeft": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -256,
-            -256,
+            -384,
+            -576,
             0,
-            256,
-            -256,
+            384,
+            -576,
             0,
-            -256,
-            256,
+            -384,
+            576,
             0,
-            256,
-            256,
+            384,
+            576,
             0
           ],
           "indexes": [
@@ -83,12 +83,12 @@
           ],
           "uv": [
             0,
-            512,
-            512,
-            512,
+            1152,
+            768,
+            1152,
             0,
             0,
-            512,
+            768,
             0
           ],
           "nuv": [
@@ -102,18 +102,18 @@
             1
           ],
           "minPos": [
-            -256,
-            -256,
+            -384,
+            -576,
             0
           ],
           "maxPos": [
-            256,
-            256,
+            384,
+            576,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "f0042c91-5e14-4232-a661-a04c7087ec06@6c48a",
+        "imageUuidOrDatabaseUri": "45a03e9d-66a0-4878-ba21-59a67a01b5aa@6c48a",
         "atlasUuid": "",
         "trimType": "none"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "f0042c91-5e14-4232-a661-a04c7087ec06@6c48a"
+    "redirect": "45a03e9d-66a0-4878-ba21-59a67a01b5aa@6c48a"
   }
 }

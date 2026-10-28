@@ -1,0 +1,43 @@
+// Particle alpha-blend giong builtin-particle (Unity: Mobile/Particles/Alpha Blended), khong depth test.
+// Node particle gan UIMeshRenderer -> ve cung luot voi sprite 2D theo thu tu hierarchy (nhu sorting cua Unity):
+// FightingCloud/WinPar dung sau Boss/Visual nen ve de len Boss.
+CCEffect %{
+  techniques:
+  - name: alpha-blend-ontop
+    passes:
+    - vert: builtin/internal/particle-vs-legacy:lpvs_main
+      frag: tinted-fs:shade
+      rasterizerState: { cullMode: none }
+      depthStencilState: { depthTest: false, depthWrite: false }
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: zero
+          blendDstAlpha: one
+          blendAlphaEq: max
+      properties:
+        mainTexture:            { value: grey }
+        mainTiling_Offset:      { value: [1, 1, 0, 0] }
+        tintColor:              { value: [0.5, 0.5, 0.5, 0.5], editor: { type: color } }
+}%
+
+CCProgram tinted-fs %{
+  precision mediump float;
+  #include <legacy/output>
+  #include <builtin/internal/embedded-alpha>
+
+  in vec2 uv;
+  in vec4 color;
+
+  uniform sampler2D mainTexture;
+  uniform FragConstants {
+    vec4 tintColor;
+  };
+
+  vec4 shade () {
+    vec4 col = 2.0 * color * tintColor * CCSampleWithAlphaSeparated(mainTexture, uv);
+    return CCFragOutput(col);
+  }
+}%

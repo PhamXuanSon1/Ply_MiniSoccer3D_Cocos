@@ -12,9 +12,29 @@
   "_defines": [
     {
       "USE_TEXTURE": true
-    }
+    },
+    {},
+    {}
   ],
   "_states": [
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    },
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    },
     {
       "rasterizerState": {},
       "depthStencilState": {},
@@ -34,10 +54,12 @@
       "tilingOffset": {
         "__type__": "cc.Vec4",
         "x": 2.13,
-        "y": 10.4,
+        "y": 200,
         "z": 0,
         "w": 0
       }
-    }
+    },
+    {},
+    {}
   ]
 }

@@ -25,7 +25,7 @@ export class PlayerVisual extends Component {
     glowLayers: Sprite[] = [];
 
     @property({ type: [CCFloat], tooltip: 'He so scale theo level (phan tu 0 = Lv1)' })
-    levelScales: number[] = [1, 1, 1, 1, 1];
+    levelScales: number[] = [1, 1.06, 1.12, 1.18, 1.24];
 
     @property({ type: CCFloat, tooltip: 'Chieu cao Y khi nhun xuong' })
     bounceY = 0.95;

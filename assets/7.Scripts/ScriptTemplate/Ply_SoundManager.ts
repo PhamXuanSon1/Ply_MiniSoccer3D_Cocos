@@ -302,7 +302,8 @@ export class Ply_SoundManager extends Ply_Singleton {
      * Phat nhac nen.
      */
     public playBGM1() {
-        if (this.isMute) return;
+        // Dang mute (an tab / SDK mute luc vao game): ghi nho de unmute thi phat
+        if (this.isMute) { this.bgmWasPlaying = true; return; }
         if (this.bgm1 && !this.bgm1.playing) {
             this.bgm1.play();
         }
@@ -345,13 +346,13 @@ export class Ply_SoundManager extends Ply_Singleton {
     }
 
     /**
-     * Tat toan bo am thanh (BGM + FX).
+     * Tat toan bo am thanh (BGM + FX). BGM chi tam dung (pause) de unmute phat tiep dung cho cu.
      */
     public mute() {
         if (!this.isMute) this.bgmWasPlaying = !!this.bgm1?.playing;
         this.isMute = true;
         this.stopFxSequence();
-        if (this.bgm1) this.bgm1.stop();
+        if (this.bgm1) this.bgm1.pause();
         for (let i = 0; i < this.fxSources.length; i++) {
             if (this.fxSources[i]) {
                 this.fxSources[i]!.stop();
@@ -364,7 +365,7 @@ export class Ply_SoundManager extends Ply_Singleton {
      */
     public unmute() {
         this.isMute = false;
-        // PlayableSDK.onUnmute: BGM dang phat truoc khi mute thi phat lai
+        // PlayableSDK.onUnmute: BGM dang phat truoc khi mute thi phat tiep tu cho da pause
         if (this.bgmWasPlaying) this.playBGM1();
         this.bgmWasPlaying = false;
     }
@@ -387,6 +388,7 @@ export class Ply_SoundManager extends Ply_Singleton {
      * Dung nhac nen.
      */
     public stopBGM(): void {
+        this.bgmWasPlaying = false;
         if (this.bgm1) {
             this.bgm1.stop();
         }

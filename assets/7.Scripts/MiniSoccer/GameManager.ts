@@ -140,10 +140,10 @@ export class GameManager extends Ply_Singleton {
         const prev = this._level;
         this._level = Math.min(this.maxLevel, Math.max(1, prev + delta));
 
-        // Am thanh phat dung 1 lan (ban Unity phat 2 lan: o ChoiceBoardHolder va UpgradePlayer)
-        const fx = this._level >= this.maxLevel && prev < this.maxLevel ? FxType.MaxLevel
-            : delta > 0 ? FxType.RightChoice : FxType.WrongChoice;
-        Ply_SoundManager.Ins?.playFx(fx);
+        // Luon phat tieng dung/sai; vua len max level thi phat them MaxLevel (neu da gan clip)
+        const sm = Ply_SoundManager.Ins;
+        sm?.playFx(delta > 0 ? FxType.RightChoice : FxType.WrongChoice);
+        if (this._level >= this.maxLevel && prev < this.maxLevel) sm?.playFx(FxType.MaxLevel);
 
         if (this._level !== prev) gameEvents.emit(GameEvent.LEVEL_CHANGED, this._level, delta);
         gameEvents.emit(GameEvent.GATE_PASSED, index, total, type, visual);

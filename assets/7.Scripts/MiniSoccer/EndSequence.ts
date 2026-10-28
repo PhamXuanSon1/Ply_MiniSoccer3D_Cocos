@@ -1,13 +1,14 @@
-import { _decorator, CCFloat, Component, Node, ParticleSystem, Sprite, Vec3 } from 'cc';
+import { _decorator, CCFloat, Component, Node, ParticleSystem, Sprite, Tween, tween, Vec3 } from 'cc';
 import { ui } from '../Manager/UI';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
 import { GameEvent, gameEvents, GameManager } from './GameManager';
+import { WinShowcase } from './WinShowcase';
 const { ccclass, property } = _decorator;
 
 /**
  * Canh danh Boss sau cong cuoi (BossController ben Unity). Gan tren node Boss.
  * delay -> an Boss + cau thu, bat may danh nhau -> fightDuration -> hien anh ket qua (+ WinPar khi thang)
- * -> showResultDuration -> tat BGM, an HUD, bat endcard Win/Lose (ui.onWin/onLose, cham la vao store).
+ * -> showResultDuration -> an HUD, bat endcard Win/Lose (ui.onWin/onLose, cham la vao store).
  * Thoi gian va anh ket qua lay tu GameManager.
  */
 @ccclass('EndSequence')
@@ -25,8 +26,14 @@ export class EndSequence extends Component {
     @property({ type: Sprite, tooltip: 'Sprite hien anh ket qua (WInPlayer)' })
     result: Sprite | null = null;
 
+    @property({ type: CCFloat, tooltip: 'Phong to anh ket qua khi thang' })
+    winScale = 1.3;
+
     @property({ type: CCFloat, tooltip: 'Phong to anh ket qua khi thua (Messi dung nho hon anh Ronaldo ngai vang)' })
     loseScale = 1.3;
+
+    @property({ type: WinShowcase, tooltip: 'Chop sang + tia sang + hao quang + sao khi thang' })
+    winShowcase: WinShowcase | null = null;
 
     @property({ type: Node, tooltip: 'Bat cung anh ket qua khi thang (WinPar)' })
     winFx: Node | null = null;
@@ -73,16 +80,27 @@ export class EndSequence extends Component {
         if (this.fightingCloud) this.fightingCloud.active = false;
         if (this.result) {
             this.result.spriteFrame = isWin ? gm.resultWin : gm.resultLose;
-            const k = isWin ? 1 : this.loseScale;
-            this.result.node.setScale(this._resultScale.x * k, this._resultScale.y * k, this._resultScale.z * k);
-            this.result.node.active = true;
+            const k = isWin ? this.winScale : this.loseScale;
+            const target = Vec3.multiplyScalar(new Vec3(), this._resultScale, k);
+            const node = this.result.node;
+            node.active = true;
+            // Nay vao: nho -> vuot 1.1 -> ve dung kich thuoc
+            Tween.stopAllByTarget(node);
+            node.setScale(Vec3.multiplyScalar(new Vec3(), target, 0.6));
+            tween(node)
+                .to(0.25, { scale: Vec3.multiplyScalar(new Vec3(), target, 1.1) }, { easing: 'quadOut' })
+                .to(0.15, { scale: target }, { easing: 'quadIn' })
+                .start();
         }
-        if (isWin) this.play(this.winFx);
+        if (isWin) {
+            this.play(this.winFx);
+            this.winShowcase?.play();
+        }
         Ply_SoundManager.Ins?.playFx(isWin ? FxType.PlayerWin : FxType.PlayerLoose);
     }
 
     private showEndcard(isWin: boolean): void {
-        Ply_SoundManager.Ins?.stopBGM();
+        // BGM chay tiep qua endcard (loop), khong tat nhu ban Unity
         for (const n of this.hideOnEndcard) n.active = false;
         if (isWin) ui?.onWin(); else ui?.onLose();
         GameManager.Ins?.endcardShown();

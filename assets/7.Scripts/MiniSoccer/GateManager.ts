@@ -84,11 +84,17 @@ export class GateManager extends Component {
         }
     }
 
-    /** Loai bang theo hinh Visual (doi hinh trong editor thi loai doi theo). */
+    /**
+     * Loai bang: so hinh Visual voi Style Increase/Decrease (theo uuid); hinh khong khop ca hai
+     * (vd doi anh Style ma chua Build lai) thi xet theo vien: vien Increase = bang tang.
+     */
     public typeOf(board: Node): ChoiceType {
-        const sf = this.visualOf(board)?.spriteFrame;
-        // So theo uuid: anh import lai thi object SpriteFrame doi nhung uuid giu nguyen
-        return sf && this.increase.visual && sf.uuid === this.increase.visual.uuid ? ChoiceType.Increase : ChoiceType.Decrease;
+        const same = (a: SpriteFrame | null | undefined, b: SpriteFrame | null) => !!a && !!b && a.uuid === b.uuid;
+        const visual = this.visualOf(board)?.spriteFrame;
+        if (same(visual, this.increase.visual)) return ChoiceType.Increase;
+        if (same(visual, this.decrease.visual)) return ChoiceType.Decrease;
+        const border = board.getChildByName('Border')?.getComponent(Sprite)?.spriteFrame;
+        return same(border, this.increase.border) ? ChoiceType.Increase : ChoiceType.Decrease;
     }
 
     private passGate(index: number, playerX: number): void {

@@ -1,4 +1,5 @@
 import { _decorator, CCFloat, CCInteger, director, Enum, EventTarget, game, Game, SpriteFrame } from 'cc';
+import { PREVIEW } from 'cc/env';
 import { Ply_Singleton } from '../ScriptTemplate/Ply_Singleton';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
 import { gc, GameController } from '../Tool/GameController';
@@ -33,6 +34,8 @@ export const GameEvent = {
     FINISHED: 'game-finished',
     /** () - Panel Win/Lose da hien. */
     ENDCARD_SHOWN: 'endcard-shown',
+    /** () - Bam Icon/Logo mo store giua game (game van choi tiep). */
+    STORE_CLICKED: 'store-clicked',
 } as const;
 
 export const gameEvents = new EventTarget();
@@ -146,6 +149,19 @@ export class GameManager extends Ply_Singleton {
         gameEvents.emit(GameEvent.GATE_PASSED, index, total, type, visual);
 
         if (index >= total - 1) this.finish(this._level >= this.winLevel);
+    }
+
+    /**
+     * Icon / Logo tren HUD: mo store nhung KHONG dung game, quay lai van choi tiep.
+     * (Cham endcard van di qua gc.redirectToStore -> dung game.) Gan vao Button click event.
+     */
+    public openStoreKeepPlaying(): void {
+        if (PREVIEW && typeof window !== 'undefined' && !window.confirm(gc?.storeDialogMessage ?? 'Open Store')) return;
+        gameEvents.emit(GameEvent.STORE_CLICKED);
+        try {
+            PlayableSDK.download();
+        } catch (e) {
+        }
     }
 
     /** EndSequence goi khi da hien endcard. */

@@ -792,6 +792,9 @@
     "stopAnims": [
       {
         "__id__": 30
+      },
+      {
+        "__id__": 146
       }
     ],
     "_googleMode": true,
@@ -21165,11 +21168,11 @@
   {
     "__type__": "cc.ClickEvent",
     "target": {
-      "__id__": 2
+      "__id__": 12
     },
-    "component": "UI",
-    "_componentId": "14a54yg4SpJCpSKdU2xV1AD",
-    "handler": "redirectToStore",
+    "component": "GameManager",
+    "_componentId": "b7e78ea+FlOWLtO/HbyCeNZ",
+    "handler": "openStoreKeepPlaying",
     "customEventData": ""
   },
   {
@@ -21414,11 +21417,11 @@
   {
     "__type__": "cc.ClickEvent",
     "target": {
-      "__id__": 2
+      "__id__": 12
     },
-    "component": "UI",
-    "_componentId": "14a54yg4SpJCpSKdU2xV1AD",
-    "handler": "redirectToStore",
+    "component": "GameManager",
+    "_componentId": "b7e78ea+FlOWLtO/HbyCeNZ",
+    "handler": "openStoreKeepPlaying",
     "customEventData": ""
   },
   {

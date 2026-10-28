@@ -19,6 +19,7 @@ export class Tracking extends Component {
         gameEvents.on(GameEvent.GATE_PASSED, this.onGatePassed, this);
         gameEvents.on(GameEvent.FINISHED, (isWin: boolean) => isWin ? AppLovinAnalytics.challengeSolved() : AppLovinAnalytics.challengeFailed(), this);
         gameEvents.on(GameEvent.ENDCARD_SHOWN, () => AppLovinAnalytics.endcardShown(), this);
+        gameEvents.on(GameEvent.STORE_CLICKED, () => AppLovinAnalytics.ctaClicked(), this);
         gc?.node.once(GameController.EVENT_STOP, () => AppLovinAnalytics.ctaClicked(), this);
     }
 

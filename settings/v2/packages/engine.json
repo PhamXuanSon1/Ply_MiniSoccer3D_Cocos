@@ -3,7 +3,7 @@
   "modules": {
     "graphics": {
       "pipeline": "custom-pipeline",
-      "custom-pipeline-post-process": true
+      "custom-pipeline-post-process": false
     },
     "configs": {
       "migrationsConfig": {
@@ -24,7 +24,7 @@
             "_value": true
           },
           "skeletal-animation": {
-            "_value": true
+            "_value": false
           },
           "3d": {
             "_value": true
@@ -61,10 +61,10 @@
           },
           "physics": {
             "_value": true,
-            "_option": "physics-ammo"
+            "_option": "physics-builtin"
           },
           "physics-ammo": {
-            "_value": true,
+            "_value": false,
             "_flags": {
               "LOAD_BULLET_MANUALLY": false
             }
@@ -79,7 +79,7 @@
             }
           },
           "physics-builtin": {
-            "_value": false
+            "_value": true
           },
           "physics-2d": {
             "_value": false,
@@ -107,7 +107,7 @@
             "_value": true
           },
           "profiler": {
-            "_value": true
+            "_value": false
           },
           "occlusion-query": {
             "_value": false
@@ -128,7 +128,7 @@
             "_value": false
           },
           "webview": {
-            "_value": true
+            "_value": false
           },
           "tween": {
             "_value": true
@@ -143,10 +143,10 @@
             "_value": false
           },
           "light-probe": {
-            "_value": true
+            "_value": false
           },
           "tiled-map": {
-            "_value": true
+            "_value": false
           },
           "vendor-google": {
             "_value": false
@@ -177,7 +177,7 @@
             "_value": false
           },
           "custom-pipeline-post-process": {
-            "_value": true
+            "_value": false
           },
           "render-pipeline": {
             "_value": true,
@@ -204,23 +204,17 @@
           "audio",
           "base",
           "custom-pipeline",
-          "custom-pipeline-post-process",
           "gfx-webgl",
           "gfx-webgl2",
           "graphics",
           "intersection-2d",
-          "light-probe",
           "mask",
           "particle",
           "particle-2d",
-          "physics-ammo",
+          "physics-builtin",
           "primitive",
-          "profiler",
-          "skeletal-animation",
-          "tiled-map",
           "tween",
-          "ui",
-          "webview"
+          "ui"
         ],
         "noDeprecatedFeatures": {
           "value": true,

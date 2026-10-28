@@ -73,7 +73,7 @@ type GameLoad = {
 var loaded = false;
 
 const gameLoad: GameLoad = {
-    gameName: " Pixel Bus Sort ",
+    gameName: " Mini Soccer ",
     font: "Arial",
     customScale: 1.5,
     customHeight: 100,

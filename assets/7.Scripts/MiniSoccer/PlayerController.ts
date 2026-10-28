@@ -75,7 +75,7 @@ export class PlayerController extends Component {
     /** Keo ngang tuong doi: dx tinh theo don vi UI (InputManager.dir.x). */
     public dragBy(dx: number): void {
         const gm = GameManager.Ins;
-        if (!gm || !gm.isPlaying || !this.trackLeft || !this.trackRight) return;
+        if (!gm || !gm.canControl || !this.trackLeft || !this.trackRight) return;
         const minX = Math.min(this.trackLeft.position.x, this.trackRight.position.x);
         const maxX = Math.max(this.trackLeft.position.x, this.trackRight.position.x);
         const size = view.getVisibleSize();
@@ -86,9 +86,9 @@ export class PlayerController extends Component {
 
     update(dt: number) {
         const gm = GameManager.Ins;
-        if (!this._running || !gm) return;
+        if (!gm) return;
         // Van chay sau cong cuoi (Ending) nhu ban Unity; toc do = quang Start->EndPos / totalMoveTime, dung som stopBeforeEnd
-        if (gm.state === GameState.Playing || gm.state === GameState.Ending) {
+        if (this._running && (gm.state === GameState.Playing || gm.state === GameState.Ending)) {
             const T = gm.totalMoveTime;
             const dist = Math.abs(this._endZ - this._startZ);
             const stopT = T * Math.max(0, Math.min(1, (dist - this.stopBeforeEnd) / Math.max(1e-6, dist)));

@@ -21,7 +21,7 @@ export class InputManager extends Component {
         GameManager.Ins?.startGame();
     }
     bindingMove() {
-        if (this.dir && GameManager.Ins?.isPlaying) PlayerController.Ins?.dragBy(this.dir.x);
+        if (this.dir && GameManager.Ins?.canControl) PlayerController.Ins?.dragBy(this.dir.x);
     }
     bindingEnd() {}
     bindingUpdate() {}

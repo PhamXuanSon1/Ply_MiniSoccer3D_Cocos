@@ -1,4 +1,4 @@
-import { _decorator, CCFloat, CCInteger, director, Enum, EventTarget, SpriteFrame } from 'cc';
+import { _decorator, CCFloat, CCInteger, director, Enum, EventTarget, game, Game, SpriteFrame } from 'cc';
 import { Ply_Singleton } from '../ScriptTemplate/Ply_Singleton';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
 import { gc, GameController } from '../Tool/GameController';
@@ -76,9 +76,6 @@ export class GameManager extends Ply_Singleton {
     @property({ type: CCFloat, group: { name: 'End' }, tooltip: 'Thoi gian hien ket qua truoc khi bat endcard' })
     showResultDuration = 3.5;
 
-    @property({ type: CCFloat, group: { name: 'End' }, tooltip: 'Cho sau khi hien endcard moi cho cham mo store' })
-    ctaDelay = 0.2;
-
     // ---- Sprites ----
     @property({ type: [SpriteFrame], group: { name: 'Sprites' }, tooltip: 'Anh cau thu theo level (phan tu 0 = Lv1)' })
     levelSprites: SpriteFrame[] = [];
@@ -95,6 +92,8 @@ export class GameManager extends Ply_Singleton {
     public get state(): GameState { return this._state; }
     public get level(): number { return this._level; }
     public get isPlaying(): boolean { return this._state === GameState.Playing; }
+    /** Con keo ngang duoc: dang chay qua cong hoac da qua cong cuoi nhung chua hien endcard. */
+    public get canControl(): boolean { return this._state === GameState.Playing || this._state === GameState.Ending; }
 
     onLoad() {
         super.onLoad();
@@ -106,11 +105,18 @@ export class GameManager extends Ply_Singleton {
         if (typeof PlayableSDK !== 'undefined' && PlayableSDK) {
             PlayableSDK.onPause(() => director.pause());
             PlayableSDK.onResume(() => director.resume());
+            PlayableSDK.onMute(() => Ply_SoundManager.Ins?.mute());
+            PlayableSDK.onUnmute(() => this.onShow());
         }
+        // An tab / khoa man hinh thi tat tieng, quay lai thi bat lai (neu chua sang store)
+        game.on(Game.EVENT_HIDE, this.onHide, this);
+        game.on(Game.EVENT_SHOW, this.onShow, this);
     }
 
     onDestroy() {
         gc?.node.off(GameController.EVENT_STOP, this.onStop, this);
+        game.off(Game.EVENT_HIDE, this.onHide, this);
+        game.off(Game.EVENT_SHOW, this.onShow, this);
         super.onDestroy();
         if (GameManager.Ins === this) GameManager.Ins = null;
     }
@@ -119,6 +125,8 @@ export class GameManager extends Ply_Singleton {
     public startGame(): void {
         if (this._state !== GameState.Ready) return;
         this._state = GameState.Playing;
+        // BGM chi phat sau lan cham dau (playBgmOnFirstClick ben Unity)
+        Ply_SoundManager.Ins?.playBGM();
         gameEvents.emit(GameEvent.START);
     }
 
@@ -154,5 +162,14 @@ export class GameManager extends Ply_Singleton {
 
     private onStop(): void {
         this._state = GameState.Ended;
+        Ply_SoundManager.Ins?.mute();
+    }
+
+    private onHide(): void {
+        Ply_SoundManager.Ins?.mute();
+    }
+
+    private onShow(): void {
+        if (!gc?.stopped) Ply_SoundManager.Ins?.unmute();
     }
 }

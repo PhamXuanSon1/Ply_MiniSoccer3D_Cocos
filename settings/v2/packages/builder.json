@@ -3,7 +3,7 @@
   "splash-setting": {
     "totalTime": 500,
     "logo": {
-      "image": "project://settings/AppIcon.png",
+      "image": "project://settings/icon rounded 4.6.png",
       "type": "custom"
     },
     "background": {

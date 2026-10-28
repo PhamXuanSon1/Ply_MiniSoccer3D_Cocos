@@ -6,47 +6,17 @@ const { ccclass, property } = _decorator;
  * Enum cac loai hieu ung am thanh (FX).
  */
 export enum FxType {
-    ClickBox = 0,
-    PickItem = 1,
-    HeavyWood = 2,
-    SmallWood = 3,
-    Cloth = 4,
-    dropMetal = 5,
-    Glass = 6,
-    dropOnFloor = 7,
-    cat1 = 8,
-    cat2 = 9,
-    cat3 = 10,
-    water = 11,
-    burnOn = 12,
-    bookOpen = 13,
-    CapyDrop = 14,
-    Grass = 15,
-    Chair = 16,
-    CoinBag = 17,
-    GoldChest = 18,
-    WoodenFish = 19,
-    Window = 20,
-    WoodenDoor = 21,
-    Skeleton = 22,
-    WoodenChair = 23,
-    ComCop = 24,
-    Rem = 25,
-    ClothesDrop = 26,
-    Sat1 = 27,
-    Sat2 = 28,
-    Computer = 29,
-    Rock = 30,
-    Piano = 31,
-    Ghost = 32,
-    Pumpkin = 33,
-    BroomSweep = 34,
-    BoilingPot = 35,
-    GhostScare = 36,
+    Clock = 0,
+    PlayerWin = 1,
+    PlayerLoose = 2,
+    RightChoice = 3,
+    WrongChoice = 4,
+    MaxLevel = 5,
+    FightingCloud = 6,
 }
 Enum(FxType);
 
-const FX_TYPE_COUNT = 37;
+const FX_TYPE_COUNT = 7;
 
 /**
  * Cau hinh du lieu am thanh.
@@ -71,115 +41,25 @@ class SoundData {
 @ccclass('FxAudio')
 class FxAudio {
     @property(SoundData)
-    clickBox: SoundData = new SoundData();
+    clock: SoundData = new SoundData();
 
     @property(SoundData)
-    pickItem: SoundData = new SoundData();
+    playerWin: SoundData = new SoundData();
 
     @property(SoundData)
-    heavyWood: SoundData = new SoundData();
+    playerLoose: SoundData = new SoundData();
 
     @property(SoundData)
-    smallWood: SoundData = new SoundData();
+    rightChoice: SoundData = new SoundData();
 
     @property(SoundData)
-    cloth: SoundData = new SoundData();
+    wrongChoice: SoundData = new SoundData();
 
     @property(SoundData)
-    dropMetal: SoundData = new SoundData();
+    maxLevel: SoundData = new SoundData();
 
     @property(SoundData)
-    glass: SoundData = new SoundData();
-
-    @property(SoundData)
-    dropOnFloor: SoundData = new SoundData();
-
-    @property(SoundData)
-    cat1: SoundData = new SoundData();
-
-    @property(SoundData)
-    cat2: SoundData = new SoundData();
-
-    @property(SoundData)
-    cat3: SoundData = new SoundData();
-
-    @property(SoundData)
-    water: SoundData = new SoundData();
-
-    @property(SoundData)
-    burnOn: SoundData = new SoundData();
-
-    @property(SoundData)
-    bookOpen: SoundData = new SoundData();
-
-    @property(SoundData)
-    capyDrop: SoundData = new SoundData();
-
-    @property(SoundData)
-    grass: SoundData = new SoundData();
-
-    @property(SoundData)
-    chair: SoundData = new SoundData();
-
-    @property(SoundData)
-    coinBag: SoundData = new SoundData();
-
-    @property(SoundData)
-    goldChest: SoundData = new SoundData();
-
-    @property(SoundData)
-    woodenFish: SoundData = new SoundData();
-
-    @property(SoundData)
-    window: SoundData = new SoundData();
-
-    @property(SoundData)
-    woodenDoor: SoundData = new SoundData();
-
-    @property(SoundData)
-    skeleton: SoundData = new SoundData();
-
-    @property(SoundData)
-    woodenChair: SoundData = new SoundData();
-
-    @property(SoundData)
-    comCop: SoundData = new SoundData();
-
-    @property(SoundData)
-    rem: SoundData = new SoundData();
-
-    @property(SoundData)
-    clothesDrop: SoundData = new SoundData();
-
-    @property(SoundData)
-    sat1: SoundData = new SoundData();
-
-    @property(SoundData)
-    sat2: SoundData = new SoundData();
-
-    @property(SoundData)
-    computer: SoundData = new SoundData();
-
-    @property(SoundData)
-    rock: SoundData = new SoundData();
-
-    @property(SoundData)
-    piano: SoundData = new SoundData();
-
-    @property(SoundData)
-    ghost: SoundData = new SoundData();
-
-    @property(SoundData)
-    pumpkin: SoundData = new SoundData();
-
-    @property(SoundData)
-    broomSweep: SoundData = new SoundData();
-
-    @property(SoundData)
-    boilingPot: SoundData = new SoundData();
-
-    @property(SoundData)
-    ghostScare: SoundData = new SoundData();
+    fightingCloud: SoundData = new SoundData();
 }
 
 /** 1 sequence FX dang phat (playFxSequence). */
@@ -212,13 +92,14 @@ export class Ply_SoundManager extends Ply_Singleton {
 
     private fxSources: (AudioSource | null)[] = new Array(FX_TYPE_COUNT).fill(null);
     private queuedCount: number[] = new Array(FX_TYPE_COUNT).fill(0);
-    private queueTimers: (number | null)[] = new Array(FX_TYPE_COUNT).fill(null);
+    private queueTimers: ((() => void) | null)[] = new Array(FX_TYPE_COUNT).fill(null);
     /** Các sequence đang phát — mỗi sequence 1 AudioSource riêng nên phát chồng lên nhau được. */
     private sequences: FxSequenceRun[] = [];
     /** AudioSource rảnh để dùng lại cho sequence sau. */
     private idleSequenceSources: AudioSource[] = [];
 
     private isMute: boolean = false;
+    private bgmWasPlaying: boolean = false;
 
     onLoad() {
         super.onLoad();
@@ -359,9 +240,9 @@ export class Ply_SoundManager extends Ply_Singleton {
      * Thay the cho CheckQueueRoutine dung Coroutine trong Unity.
      */
     private startQueueCheck(index: number) {
-        if (this.queueTimers[index] !== null) {
-            this.unschedule(this.checkQueueCallback.bind(this, index));
-        }
+        // Moi FxType chi giu 1 callback kiem tra; callback cu phai unschedule dung tham chieu
+        const old = this.queueTimers[index];
+        if (old) this.unschedule(old);
 
         const callback = () => {
             const source = this.fxSources[index];
@@ -382,11 +263,8 @@ export class Ply_SoundManager extends Ply_Singleton {
             }
         };
 
+        this.queueTimers[index] = callback;
         this.schedule(callback, 0.016);
-    }
-
-    private checkQueueCallback(index: number) {
-        // Callback giu tham chieu
     }
 
     /**
@@ -442,43 +320,13 @@ export class Ply_SoundManager extends Ply_Singleton {
      */
     private getSoundData(type: FxType): SoundData | null {
         switch (type) {
-            case FxType.ClickBox: return this.fxAudio.clickBox;
-            case FxType.PickItem: return this.fxAudio.pickItem;
-            case FxType.HeavyWood: return this.fxAudio.heavyWood;
-            case FxType.SmallWood: return this.fxAudio.smallWood;
-            case FxType.Cloth: return this.fxAudio.cloth;
-            case FxType.dropMetal: return this.fxAudio.dropMetal;
-            case FxType.Glass: return this.fxAudio.glass;
-            case FxType.dropOnFloor: return this.fxAudio.dropOnFloor;
-            case FxType.cat1: return this.fxAudio.cat1;
-            case FxType.cat2: return this.fxAudio.cat2;
-            case FxType.cat3: return this.fxAudio.cat3;
-            case FxType.water: return this.fxAudio.water;
-            case FxType.burnOn: return this.fxAudio.burnOn;
-            case FxType.bookOpen: return this.fxAudio.bookOpen;
-            case FxType.CapyDrop: return this.fxAudio.capyDrop;
-            case FxType.Grass: return this.fxAudio.grass;
-            case FxType.Chair: return this.fxAudio.chair;
-            case FxType.CoinBag: return this.fxAudio.coinBag;
-            case FxType.GoldChest: return this.fxAudio.goldChest;
-            case FxType.WoodenFish: return this.fxAudio.woodenFish;
-            case FxType.Window: return this.fxAudio.window;
-            case FxType.WoodenDoor: return this.fxAudio.woodenDoor;
-            case FxType.Skeleton: return this.fxAudio.skeleton;
-            case FxType.WoodenChair: return this.fxAudio.woodenChair;
-            case FxType.ComCop: return this.fxAudio.comCop;
-            case FxType.Rem: return this.fxAudio.rem;
-            case FxType.ClothesDrop: return this.fxAudio.clothesDrop;
-            case FxType.Sat1: return this.fxAudio.sat1;
-            case FxType.Sat2: return this.fxAudio.sat2;
-            case FxType.Computer: return this.fxAudio.computer;
-            case FxType.Rock: return this.fxAudio.rock;
-            case FxType.Piano: return this.fxAudio.piano;
-            case FxType.Ghost: return this.fxAudio.ghost;
-            case FxType.Pumpkin: return this.fxAudio.pumpkin;
-            case FxType.BroomSweep: return this.fxAudio.broomSweep;
-            case FxType.BoilingPot: return this.fxAudio.boilingPot;
-            case FxType.GhostScare: return this.fxAudio.ghostScare;
+            case FxType.Clock: return this.fxAudio.clock;
+            case FxType.PlayerWin: return this.fxAudio.playerWin;
+            case FxType.PlayerLoose: return this.fxAudio.playerLoose;
+            case FxType.RightChoice: return this.fxAudio.rightChoice;
+            case FxType.WrongChoice: return this.fxAudio.wrongChoice;
+            case FxType.MaxLevel: return this.fxAudio.maxLevel;
+            case FxType.FightingCloud: return this.fxAudio.fightingCloud;
             default: return null;
         }
     }
@@ -500,6 +348,7 @@ export class Ply_SoundManager extends Ply_Singleton {
      * Tat toan bo am thanh (BGM + FX).
      */
     public mute() {
+        if (!this.isMute) this.bgmWasPlaying = !!this.bgm1?.playing;
         this.isMute = true;
         this.stopFxSequence();
         if (this.bgm1) this.bgm1.stop();
@@ -515,6 +364,9 @@ export class Ply_SoundManager extends Ply_Singleton {
      */
     public unmute() {
         this.isMute = false;
+        // PlayableSDK.onUnmute: BGM dang phat truoc khi mute thi phat lai
+        if (this.bgmWasPlaying) this.playBGM1();
+        this.bgmWasPlaying = false;
     }
 
     /**

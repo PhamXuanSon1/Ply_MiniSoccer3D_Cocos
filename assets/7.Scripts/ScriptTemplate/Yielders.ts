@@ -9,6 +9,9 @@
  * Trong Cocos Creator khong co coroutine voi yield. Thay vao do, ta cung cap
  * cac tien ich cho doi dua tren Promise va cac ham ho tro schedule.
  * 
+ * LUU Y: wait() dung setTimeout nen KHONG dung lai khi game pause (PlayableSDK.onPause / director.pause).
+ * Delay trong gameplay hay dung this.scheduleOnce() hoac tween().delay().
+ *
  * Cach dung:
  *   await Yielders.wait(1.5);           // Cho 1.5 giay
  *   await Yielders.waitFrame();         // Cho den frame tiep theo

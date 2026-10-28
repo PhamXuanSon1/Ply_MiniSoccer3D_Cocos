@@ -1,4 +1,6 @@
 import { _decorator, Component, EventTouch, Input, input, misc, Node, v2, Vec2 } from 'cc';
+import { GameManager } from '../MiniSoccer/GameManager';
+import { PlayerController } from '../MiniSoccer/PlayerController';
 const { ccclass, property } = _decorator;
 
 @ccclass('InputManager')
@@ -14,8 +16,13 @@ export class InputManager extends Component {
 
     dir: Vec2 = null;
 
-    bindingStart() {}
-    bindingMove() {}
+    // MiniSoccer: cham lan dau bat dau game; keo ngang di chuyen cau thu giua 2 lan
+    bindingStart() {
+        GameManager.Ins?.startGame();
+    }
+    bindingMove() {
+        if (this.dir && GameManager.Ins?.isPlaying) PlayerController.Ins?.dragBy(this.dir.x);
+    }
     bindingEnd() {}
     bindingUpdate() {}
 

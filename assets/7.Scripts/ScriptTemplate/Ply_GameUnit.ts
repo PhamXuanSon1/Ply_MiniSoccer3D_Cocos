@@ -14,7 +14,7 @@ const { ccclass, property } = _decorator;
 export class Ply_GameUnit extends Component {
 
     @property({ type: PoolType })
-    public poolType: PoolType = PoolType.CorrectEffect;
+    public poolType: PoolType = PoolType.None;
 
     /**
      * Tham chieu toi node cua unit nay (tuong duong Transform `tf` trong Unity).

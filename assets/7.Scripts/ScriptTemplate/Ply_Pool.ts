@@ -18,7 +18,7 @@ const { ccclass, property } = _decorator;
 class PoolAmount {
 
     @property({ type: PoolType })
-    type: PoolType = PoolType.Heart;
+    type: PoolType = PoolType.None;
 
     @property(CCInteger)
     amount: number = 0;

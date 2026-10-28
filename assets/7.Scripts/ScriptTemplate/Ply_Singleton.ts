@@ -1,4 +1,4 @@
-import { _decorator, Component } from 'cc';
+import { _decorator, Component, js } from 'cc';
 const { ccclass } = _decorator;
 
 /**
@@ -21,7 +21,7 @@ export class Ply_Singleton extends Component {
      * Cac subclass nen tu gan gian tri cho bien static Ins cua minh.
      */
     onLoad() {
-        const className = (this.constructor as any).name;
+        const className = Ply_Singleton.keyOf(this);
         if (Ply_Singleton._instances.has(className)) {
             this.node.destroy();
             return;
@@ -29,8 +29,16 @@ export class Ply_Singleton extends Component {
         Ply_Singleton._instances.set(className, this);
     }
 
+    /**
+     * Key = ten @ccclass (khong bi minify khi build release).
+     * constructor.name co the bi doi thanh 'e', 't'... -> 2 manager khac nhau trung key.
+     */
+    private static keyOf(comp: Component): string {
+        return js.getClassName(comp) || (comp.constructor as any).name;
+    }
+
     onDestroy() {
-        const className = (this.constructor as any).name;
+        const className = Ply_Singleton.keyOf(this);
         if (Ply_Singleton._instances.get(className) === this) {
             Ply_Singleton._instances.delete(className);
         }

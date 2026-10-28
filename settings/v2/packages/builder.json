@@ -3,15 +3,15 @@
   "splash-setting": {
     "totalTime": 500,
     "logo": {
-      "image": "project://settings/Logo.png",
+      "image": "project://settings/AppIcon.png",
       "type": "custom"
     },
     "background": {
       "type": "color",
       "color": {
-        "x": 1,
-        "y": 0.8745098039215686,
-        "z": 0.6078431372549019,
+        "x": 0.7607843137254902,
+        "y": 0.8784313725490196,
+        "z": 0.9058823529411765,
         "w": 1
       },
       "image": "project://settings/download.png"

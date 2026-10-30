@@ -1,6 +1,6 @@
-import { _decorator, CCFloat, Component, instantiate, Prefab, Sprite, Tween, tween, Vec3 } from 'cc';
-import { applyFrame, FrameBase } from './CharacterFrame';
-import { CharacterFx } from './CharacterFx';
+import { _decorator, CCFloat, Component, Sprite, Tween, tween, Vec3 } from 'cc';
+import { applyFrame, FrameBase } from '../../CharacterFX/Scripts/CharacterFrame';
+import { CharacterFxHost } from '../../CharacterFX/Scripts/CharacterFxHost';
 import { CharacterConfig, GameEvent, gameEvents, GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
@@ -8,13 +8,16 @@ const { ccclass, property } = _decorator;
  * Hinh cau thu theo level (PlayerVisual ben Unity). Gan tren node Character (goc o chan).
  * - Doi anh Body theo level + nhan vat da chon (scale/offset rieng tung anh, xem CharacterFrame), nhun Y lien tuc khi dang choi.
  * - Max level: phong to nhe roi ve + hieu ung rieng cua nhan vat: prefab CharacterConfig.maxLevelFx
- *   (FX_Ronaldo / FX_Mbappe / FX_Yamal ...), tao lam con cua Visuals khi chon nhan vat, goi begin/end/setFrame.
+ *   (FX_Ronaldo / FX_Mbappe / FX_Yamal ...), giao cho CharacterFxHost (thu muc CharacterFX, dung duoc o project khac).
  */
 @ccclass('PlayerVisual')
 export class PlayerVisual extends Component {
 
     @property(Sprite)
     body: Sprite | null = null;
+
+    @property({ type: CharacterFxHost, tooltip: 'Gan hieu ung max level (cung node Character)' })
+    fxHost: CharacterFxHost | null = null;
 
     @property({ type: [CCFloat], tooltip: 'He so scale theo level (phan tu 0 = Lv1)' })
     levelScales: number[] = [1, 1.08, 1.16, 1.24];
@@ -39,8 +42,6 @@ export class PlayerVisual extends Component {
     private _level = 1;
     private _started = false;
     private _boosting = false;
-    private _fx: CharacterFx | null = null;
-    private _fxPrefab: Prefab | null = null;
 
     onLoad() {
         this._defaultScale.set(this.node.scale);
@@ -70,19 +71,9 @@ export class PlayerVisual extends Component {
         this.setSprite(this._level);
     }
 
-    /** Tao prefab hieu ung max level cua nhan vat dang chon (doi nhan vat thi huy cai cu). */
+    /** Doi prefab hieu ung max level theo nhan vat dang chon. */
     private applyFx(): void {
-        const prefab = this.character?.maxLevelFx ?? null;
-        if (prefab === this._fxPrefab) return;
-        this._fx?.dispose();
-        this._fx = null;
-        this._fxPrefab = prefab;
-        const body = this.body, visuals = body?.node.parent, rig = this.node.parent;
-        if (!prefab || !body || !visuals || !rig) return;
-        const node = instantiate(prefab);
-        node.setParent(visuals);
-        this._fx = node.getComponent(CharacterFx);
-        this._fx?.bind({ character: this.node, visuals, body, rig });
+        this.fxHost?.setPrefab(this.character?.maxLevelFx ?? null);
     }
 
     private onStart(): void {
@@ -104,7 +95,7 @@ export class PlayerVisual extends Component {
         const f = this.character?.level(level) ?? null;
         if (!this.body || !f) return;
         applyFrame(this.body, f, this._bodyBase);
-        this._fx?.setFrame(f);
+        this.fxHost?.setFrame(f);
     }
 
     private targetScale(out: Vec3): Vec3 {
@@ -134,7 +125,7 @@ export class PlayerVisual extends Component {
         this._boosting = true;
         this.unschedule(this.endPop);
         this.scheduleOnce(this.endPop, this.maxBoostTime);
-        this._fx?.begin();
+        this.fxHost?.setMaxLevel(true);
     }
 
     private endPop(): void {
@@ -146,6 +137,6 @@ export class PlayerVisual extends Component {
     private endBoost(): void {
         this.unschedule(this.endPop);
         this._boosting = false;
-        this._fx?.end();
+        this.fxHost?.setMaxLevel(false);
     }
 }

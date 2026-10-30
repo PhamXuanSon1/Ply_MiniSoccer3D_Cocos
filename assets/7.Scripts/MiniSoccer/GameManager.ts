@@ -3,7 +3,7 @@ import { PREVIEW } from 'cc/env';
 import { Ply_Singleton } from '../ScriptTemplate/Ply_Singleton';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
 import { gc, GameController } from '../Tool/GameController';
-import { CharacterFrame } from './CharacterFrame';
+import { CharacterFrame } from '../../CharacterFX/Scripts/CharacterFrame';
 const { ccclass, property } = _decorator;
 
 /** Loai bang chon: tang hoac giam 1 level (EChoiceType ben Unity). */

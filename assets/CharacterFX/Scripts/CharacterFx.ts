@@ -2,7 +2,7 @@ import { _decorator, Component, Node, Sprite } from 'cc';
 import { CharacterFrame } from './CharacterFrame';
 const { ccclass, property } = _decorator;
 
-/** Cac node cua cau thu ma hieu ung can biet (PlayerVisual truyen vao khi gan prefab). */
+/** Cac node cua cau thu ma hieu ung can biet (CharacterFxHost truyen vao khi gan prefab). */
 export interface FxContext {
     /** Node Character (vi tri ngang cua cau thu). */
     character: Node;
@@ -15,11 +15,12 @@ export interface FxContext {
 
 /**
  * Nen cho prefab hieu ung max level cua tung nhan vat (FX_Ronaldo / FX_Mbappe / FX_Yamal ...).
- * PlayerVisual instantiate prefab (CharacterConfig.maxLevelFx) lam con cua Visuals, goi bind() roi:
+ * CharacterFxHost instantiate prefab lam con cua Visuals, goi bind() roi:
  *   setFrame() moi lan doi anh, begin() khi vua len max level, end() khi tut khoi max level.
  * Node trong behindBody duoc dua ra Visuals, nam ngay truoc Body (ve sau nguoi);
  * node trong behindCharacter duoc dua ra Rig, nam truoc Character (khong chay ngang theo nguoi, vd duoi bong mo).
- * Doi nhan vat: PlayerVisual goi dispose() de huy prefab cung cac node da dua ra ngoai.
+ * Doi hieu ung: CharacterFxHost goi dispose() de huy prefab cung cac node da dua ra ngoai.
+ * Lam hieu ung moi: ke thua class nay, override setFrame / begin / end.
  */
 @ccclass('CharacterFx')
 export class CharacterFx extends Component {
@@ -32,6 +33,9 @@ export class CharacterFx extends Component {
 
     protected ctx: FxContext | null = null;
     private _moved: Node[] = [];
+
+    /** Cac node hieu ung dang nam ngoai goc prefab (behindBody / behindCharacter / node tu tao qua adopt). */
+    public get movedNodes(): readonly Node[] { return this._moved; }
 
     public bind(ctx: FxContext): void {
         this.ctx = ctx;
@@ -46,6 +50,11 @@ export class CharacterFx extends Component {
             n.setSiblingIndex(ctx.character.getSiblingIndex());
             this._moved.push(n);
         }
+    }
+
+    /** Node hieu ung tu tao nam ngoai goc prefab: huy cung dispose(). */
+    protected adopt(n: Node): void {
+        this._moved.push(n);
     }
 
     /** Anh Body vua doi (theo level). */

@@ -39,7 +39,7 @@ export class RonaldoGlowFx extends CharacterFx {
     }
 
     onDestroy() {
-        if (this._rimRelay) { Tween.stopAllByTarget(this._rimRelay); if (this._rimRelay.node.isValid) this._rimRelay.node.destroy(); }
+        if (this._rimRelay) Tween.stopAllByTarget(this._rimRelay);
         super.onDestroy();
     }
 
@@ -49,6 +49,7 @@ export class RonaldoGlowFx extends CharacterFx {
         n.layer = ctx.body.node.layer;
         n.setParent(ctx.visuals);
         n.setSiblingIndex(ctx.body.node.getSiblingIndex());
+        this.adopt(n);
         n.addComponent(UITransform);
         this._rimRelay = n.addComponent(Sprite);
         this._rimRelay.sizeMode = Sprite.SizeMode.CUSTOM;

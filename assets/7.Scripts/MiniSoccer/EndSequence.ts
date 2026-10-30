@@ -1,9 +1,9 @@
 import { _decorator, CCFloat, Component, Node, ParticleSystem, Sprite, Tween, tween, Vec3 } from 'cc';
 import { ui } from '../Manager/UI';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
-import { applyFrame, FrameBase } from './CharacterFrame';
+import { applyFrame, FrameBase } from '../../CharacterFX/Scripts/CharacterFrame';
 import { CharacterConfig, GameEvent, gameEvents, GameManager } from './GameManager';
-import { WinShowcase } from './WinShowcase';
+import { WinShowcase } from '../../CharacterFX/Scripts/WinShowcase';
 const { ccclass, property } = _decorator;
 
 /**
@@ -34,11 +34,8 @@ export class EndSequence extends Component {
     @property({ type: CCFloat, tooltip: 'Phong to anh ket qua khi thua (anh thang cua Boss)' })
     loseScale = 1.3;
 
-    @property({ type: WinShowcase, tooltip: 'Chop sang + tia sang + hao quang + sao khi thang' })
-    winShowcase: WinShowcase | null = null;
-
-    @property({ type: Node, tooltip: 'Bat cung anh ket qua khi thang (WinPar)' })
-    winFx: Node | null = null;
+    @property({ type: Node, tooltip: 'Prefab FX_Win (goc co WinShowcase): tia sang + hao quang + chop + sao + phao giay khi thang' })
+    winEffect: Node | null = null;
 
     @property({ type: Sprite, tooltip: 'Anh chinh endcard Lose (Lose/Content/MainImg): doi thanh anh thang cua Boss' })
     loseEndcardImage: Sprite | null = null;
@@ -58,7 +55,7 @@ export class EndSequence extends Component {
         this._resultBase = new FrameBase(this.result?.node);
         this._bossBase = new FrameBase(this.bossVisual);
         this._loseBase = new FrameBase(this.loseEndcardImage?.node);
-        for (const n of [this.fightingCloud, this.result?.node, this.winFx]) if (n) n.active = false;
+        for (const n of [this.fightingCloud, this.result?.node]) if (n) n.active = false;
         gameEvents.on(GameEvent.CHARACTER_SELECTED, this.applyBoss, this);
         gameEvents.on(GameEvent.FINISHED, this.onFinished, this);
     }
@@ -113,8 +110,8 @@ export class EndSequence extends Component {
                 .start();
         }
         if (isWin) {
-            this.play(this.winFx);
-            this.winShowcase?.play();
+            // Chi giu tham chieu node goc prefab (tham chieu component ben trong instance khong luu duoc khi gan bang script)
+            this.winEffect?.getComponent(WinShowcase)?.play();
         }
         Ply_SoundManager.Ins?.playFx(isWin ? FxType.PlayerWin : FxType.PlayerLoose);
     }

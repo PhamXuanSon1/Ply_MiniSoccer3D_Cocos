@@ -1,16 +1,16 @@
-import { _decorator, CCFloat, Color, Component, Node, Sprite, Tween, tween, Vec3 } from 'cc';
+import { _decorator, CCFloat, Color, Component, Node, ParticleSystem, Sprite, Tween, tween, Vec3 } from 'cc';
 const { ccclass, property } = _decorator;
 
 /**
  * Hieu ung lam dep anh thang (Ronaldo ngai vang): chop sang -> tia sang xoay + hao quang nhip tho + sao lap lanh.
- * Gan tren goc prefab FX_Win (con cua Boss, dat SAU anh ket qua). EndSequence goi play() luc hien anh ket qua khi thang.
- * Nhom back (Rays, Glow) duoc dua ra lam con dau tien cua Boss luc onLoad de ve SAU anh ket qua; con lai ve truoc.
+ * Gan tren goc prefab FX_Win (dat lam anh em, SAU sprite anh ket qua). Code game goi play() luc hien anh ket qua.
+ * Nhom back (Rays, Glow) duoc dua ra lam con dau tien cua node cha luc onLoad de ve SAU anh ket qua; con lai ve truoc.
  * Cac node con dat san trong prefab; script chi bat va chay tween.
  */
 @ccclass('WinShowcase')
 export class WinShowcase extends Component {
 
-    @property({ type: Node, tooltip: 'Nhom ve SAU anh ket qua (chua rays + glow), duoc dua ra dau Boss khi chay' })
+    @property({ type: Node, tooltip: 'Nhom ve SAU anh ket qua (chua rays + glow), duoc dua ra dau node cha khi chay' })
     back: Node | null = null;
 
     @property({ type: Sprite, tooltip: 'Tia sang xoay cham sau anh' })
@@ -28,6 +28,9 @@ export class WinShowcase extends Component {
     @property({ type: CCFloat, tooltip: 'Do/giay tia sang xoay' })
     raySpeed = 25;
 
+    @property({ type: Node, tooltip: 'Phao giay (ParticleSystem playOnAwake tat), bat + chay cung play()' })
+    confetti: Node | null = null;
+
     private _spin = false;
     private _scales = new Map<Node, Vec3>();
 
@@ -40,6 +43,7 @@ export class WinShowcase extends Component {
             this._scales.set(s.node, s.node.scale.clone());
             s.node.active = false;
         }
+        if (this.confetti) this.confetti.active = false;
     }
 
     onDestroy() {
@@ -48,6 +52,10 @@ export class WinShowcase extends Component {
 
     public play(): void {
         this.node.active = true;
+        if (this.confetti) {
+            this.confetti.active = true;
+            for (const ps of this.confetti.getComponentsInChildren(ParticleSystem)) ps.play();
+        }
 
         if (this.flash) {
             const f = this.flash, base = this._scales.get(f.node)!;

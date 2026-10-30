@@ -1,7 +1,7 @@
 import { _decorator, CCFloat, CCInteger, CCObject, Color, Component, director, Enum, Node, Sprite, UITransform } from 'cc';
 import { EDITOR } from 'cc/env';
-import { applyFrame, applyGlow, CharacterFrame, FrameBase } from './CharacterFrame';
-import { AuraFx } from './AuraFx';
+import { applyFrame, applyGlow, CharacterFrame, FrameBase } from '../../CharacterFX/Scripts/CharacterFrame';
+import { AuraFx } from '../../CharacterFX/Scripts/AuraFx';
 import { CharacterConfig, GameManager } from './GameManager';
 import { PlayerVisual } from './PlayerVisual';
 const { ccclass, property, executeInEditMode } = _decorator;

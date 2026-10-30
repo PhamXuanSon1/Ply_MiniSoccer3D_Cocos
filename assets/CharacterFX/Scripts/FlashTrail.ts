@@ -1,6 +1,5 @@
 import { _decorator, CCFloat, Color, Node, Quat, Sprite, SpriteFrame, Tween, tween, UITransform, Vec3 } from 'cc';
 import { CharacterFx } from './CharacterFx';
-import { GameManager, GameState } from './GameManager';
 import { PowerAura } from './PowerAura';
 const { ccclass, property } = _decorator;
 
@@ -72,9 +71,8 @@ export class FlashTrail extends CharacterFx {
 
     update(dt: number) {
         const ctx = this.ctx;
+        // Body bi an (canh danh Boss, endcard) thi ngung tao bong / tia set
         if (!this._on || !ctx || !ctx.body.node.activeInHierarchy) return;
-        const state = GameManager.Ins?.state;
-        if (state !== GameState.Playing && state !== GameState.Ending) return;
 
         // Bong mo theo quang duong lach ngang: lach nhanh hay cham deu ra 1 duoi bong deu nhau, dung im thi khong co
         // Lach xa trong 1 khung (keo nhanh / fps thap) thi rai them bong tren doan vua di de duoi lien mach

@@ -6715,7 +6715,10 @@
       }
     ],
     "raySpeed": 25,
-    "_id": ""
+    "_id": "",
+    "confetti": {
+      "__id__": 58
+    }
   },
   {
     "__type__": "cc.CompPrefabInfo",

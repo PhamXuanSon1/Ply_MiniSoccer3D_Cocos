@@ -16,7 +16,7 @@ Thư mục này **tự đủ**: script chỉ import `cc` và các file cùng th�
 ### Ngay trong Scene editor (không cần Play)
 
 1. Mở scene **`Preview/CharacterFX_Preview.scene`** (chỉ cần mở 1 lần).
-2. **Bấm chọn 1 prefab FX trong panel Assets** → hiệu ứng tự chạy trong Scene view.
+2. Chọn node `Previewer`, chọn hiệu ứng ở dropdown **Chon FX** (hoặc bấm chọn 1 prefab FX trong panel Assets) → hiệu ứng tự chạy trong Scene view. Dropdown tự liệt kê mọi prefab trong `CharacterFX/Prefabs` (đổi thư mục ở `Prefab Folder`).
    - `FX_*_MaxLevel`: gắn lên nhân vật mẫu, nhân vật lách qua lại để thấy đuôi bóng mờ.
    - `FX_Win`, `FX_FightingCloud`: chạy lặp lại mỗi 3 giây (`Loop` trên `FxEditorPlayer`).
    - Prefab FX mới (có `CharacterFx`, `WinShowcase` hoặc `ParticleSystem`) cũng tự nhận, không cần đăng ký.

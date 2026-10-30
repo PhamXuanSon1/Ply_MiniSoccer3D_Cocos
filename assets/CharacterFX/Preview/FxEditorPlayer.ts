@@ -1,4 +1,4 @@
-import { _decorator, assetManager, CCFloat, CCObject, Component, instantiate, js, Node, ParticleSystem, Prefab, TweenSystem } from 'cc';
+import { _decorator, assetManager, CCClass, CCFloat, CCObject, Component, Enum, instantiate, js, Node, ParticleSystem, Prefab, TweenSystem } from 'cc';
 import { EDITOR } from 'cc/env';
 import { applyFrame, FrameBase } from '../Scripts/CharacterFrame';
 import { CharacterFx } from '../Scripts/CharacterFx';
@@ -14,8 +14,8 @@ type Mode = 'character' | 'win' | 'particles';
 
 /**
  * XEM HIEU UNG NGAY TRONG SCENE EDITOR (khong can bam Play).
- * Mo scene CharacterFX_Preview, roi BAM CHON 1 prefab FX trong panel Assets -> hieu ung tu chay trong Scene view.
- * (Hoac keo prefab vao o `effect` cua component nay.)
+ * Mo scene CharacterFX_Preview, roi chon FX o dropdown `Chon FX` (liet ke prefab trong prefabFolder),
+ * hoac BAM CHON 1 prefab FX trong panel Assets -> hieu ung tu chay trong Scene view.
  * - Prefab co CharacterFx (FX_*_MaxLevel): gan len nhan vat mau, nhan vat lach qua lai; hieu ung 1 lan (Ronaldo) tu chay lai.
  * - Prefab co WinShowcase (FX_Win): hien anh thang mau + chay hieu ung, lap lai.
  * - Prefab chi co ParticleSystem (FX_FightingCloud ...): chay particle, lap lai.
@@ -33,7 +33,19 @@ export class FxEditorPlayer extends Component {
     get playing(): boolean { return this._playing; }
     set playing(v: boolean) { this._playing = v; if (!v) this.clear(); else this._lastUuid = ''; }
 
-    @property({ type: Prefab, tooltip: 'Prefab dang xem (tu doi khi chon prefab trong Assets; keo vao day cung duoc)' })
+    @property({ type: Enum({ '(dang tai...)': 0 }), displayName: 'Chon FX', tooltip: 'Chon hieu ung de xem (danh sach lay tu prefabFolder)' })
+    get pick(): number { return this._pick; }
+    set pick(v: number) {
+        this._pick = v;
+        const item = this._list[v];
+        if (EDITOR && item) this.load(item.uuid);
+    }
+
+    @property({ tooltip: 'Thu muc chua prefab FX de liet ke vao dropdown' })
+    get prefabFolder(): string { return this._prefabFolder; }
+    set prefabFolder(v: string) { this._prefabFolder = v; if (EDITOR) this.refreshList(); }
+
+    @property({ type: Prefab, visible: false })
     get effect(): Prefab | null { return this._effect; }
     set effect(v: Prefab | null) { this._effect = v; if (EDITOR) this.show(v); }
 
@@ -44,6 +56,12 @@ export class FxEditorPlayer extends Component {
     private _playing = true;
     @property
     private _effect: Prefab | null = null;
+    @property
+    private _pick = 0;
+    @property
+    private _prefabFolder = 'db://assets/CharacterFX/Prefabs';
+
+    private _list: { name: string, uuid: string }[] = [];
 
     private _lastUuid = '';
     private _mode: Mode | null = null;
@@ -58,6 +76,7 @@ export class FxEditorPlayer extends Component {
     onEnable() {
         if (!EDITOR) return;
         this._lastUuid = '';
+        this.refreshList();
         // Editor chi ve lai khi co thay doi -> giu 1 timer xin ve lien tuc de update() duoc goi moi khung
         this._timer = setInterval(() => { if (this._playing && this.isValid) this.repaint(); }, 16);
     }
@@ -85,14 +104,43 @@ export class FxEditorPlayer extends Component {
             uuid = Editor.Selection.getLastSelected('asset') || '';
         } catch { return; }
         if (!uuid || uuid === this._lastUuid) return;
+        this.load(uuid);
+    }
+
+    /** Nap prefab theo uuid; la prefab FX thi xem luon va dong bo dropdown. */
+    private load(uuid: string): void {
         this._lastUuid = uuid;
         this._loading = true;
         assetManager.loadAny(uuid, (err: Error | null, asset: unknown) => {
             this._loading = false;
             if (err || !(asset instanceof Prefab) || !this.kindOf(asset)) return;
             this._effect = asset;
+            const i = this._list.findIndex(it => it.uuid === uuid);
+            if (i >= 0) this._pick = i;
             this.show(asset);
         });
+    }
+
+    /** Liet ke prefab trong prefabFolder lam danh sach cho dropdown `Chon FX`. */
+    private async refreshList(): Promise<void> {
+        if (typeof Editor === 'undefined') return;
+        let infos: { name: string, uuid: string }[] = [];
+        try {
+            const folder = this._prefabFolder.replace(/\/+$/, '');
+            infos = await Editor.Message.request('asset-db', 'query-assets', { ccType: 'cc.Prefab', pattern: folder + '/**/*' }) || [];
+        } catch { return; }
+        this._list = infos
+            .map(i => ({ name: (i.name || '').replace(/\.prefab$/, ''), uuid: i.uuid }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        const enumList = this._list.length > 0
+            ? this._list.map((it, i) => ({ name: it.name, value: i }))
+            : [{ name: '(khong co prefab)', value: 0 }];
+        CCClass.Attr.setClassAttr(FxEditorPlayer, 'pick', 'enumList', enumList);
+        const cur = this._effect ? this._list.findIndex(it => it.uuid === this._effect!.uuid) : -1;
+        if (cur >= 0) this._pick = cur;
+        else if (this._pick >= this._list.length) this._pick = 0;
+        // Bao Inspector ve lai de hien danh sach moi
+        try { Editor.Message.broadcast('scene:change-node', this.node.uuid); } catch { /* bo qua */ }
     }
 
     private kindOf(prefab: Prefab): Mode | null {

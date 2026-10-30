@@ -379,7 +379,7 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 0.30005748926906756,
+      "x": -0.10326499511237873,
       "y": -0.49,
       "z": -0.535
     },
@@ -819,7 +819,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 590.970703125,
+      "width": 628.525390625,
       "height": 75.6
     },
     "_anchorPoint": {
@@ -849,7 +849,7 @@
       "b": 70,
       "a": 255
     },
-    "_string": "FX_Yamal_MaxLevel   (editor)",
+    "_string": "FX_Mbappe_MaxLevel   (editor)",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 44,
@@ -1078,10 +1078,10 @@
     "loop": 3,
     "_playing": true,
     "_effect": {
-      "__uuid__": "f933f804-2b32-47c7-bd44-a6db6544d047",
+      "__uuid__": "b4b61440-c95d-4cb5-8fcf-c6d9e8e55b71",
       "__expectedType__": "cc.Prefab"
     },
-    "_pick": 4,
+    "_pick": 1,
     "_prefabFolder": "db://assets/CharacterFX/Prefabs",
     "_id": "2eu4UR1mlOn5eQ2gL6Wz+m"
   },

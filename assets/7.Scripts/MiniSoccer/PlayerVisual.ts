@@ -1,6 +1,6 @@
 import { _decorator, CCFloat, Color, Component, Sprite, Tween, tween, Vec3 } from 'cc';
 import { applyFrame, applyGlow, FrameBase } from './CharacterFrame';
-import { CharacterConfig, GameEvent, gameEvents, GameManager } from './GameManager';
+import { CharacterConfig, GameEvent, gameEvents, GameManager, MaxLevelFx } from './GameManager';
 const { ccclass, property } = _decorator;
 
 /**
@@ -147,7 +147,8 @@ export class PlayerVisual extends Component {
 
     private showAura(): void {
         const a = this.aura, f = this.character?.level(this._level) ?? null;
-        if (!a || !this.body || !f?.glow) return;
+        // Nhan vat dung hieu ung Flash (FlashTrail) thi khong co hao quang
+        if (!a || !this.body || !f?.glow || this.character!.maxFx !== MaxLevelFx.Aura) return;
         this._auraOn = true;
         a.node.active = true;
         applyGlow(a, f, this.body, this._auraBase);

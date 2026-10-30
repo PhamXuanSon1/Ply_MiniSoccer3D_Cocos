@@ -44,6 +44,13 @@ export const GameEvent = {
 
 export const gameEvents = new EventTarget();
 
+/** Hieu ung khi cau thu dat max level. */
+export enum MaxLevelFx {
+    Aura = 0,   // hao quang theo dang nguoi, tho nhe (Yamal)
+    Flash = 1,  // chay kieu The Flash: bong mo phia sau + tia set (Mbappe), khong hao quang
+}
+Enum(MaxLevelFx);
+
 /** Bo hinh cua 1 nhan vat chon duoc (Mbappe / Yamal). Nhan vat con lai lam Boss. */
 @ccclass('CharacterConfig')
 export class CharacterConfig {
@@ -56,7 +63,10 @@ export class CharacterConfig {
     @property({ type: CharacterFrame, tooltip: 'Anh ket qua khi nhan vat nay thang (cung dung khi no la Boss va nguoi choi thua)' })
     win = new CharacterFrame();
 
-    @property({ tooltip: 'Mau hao quang quanh nguoi khi max level' })
+    @property({ type: MaxLevelFx, tooltip: 'Kieu hieu ung khi max level' })
+    maxFx = MaxLevelFx.Aura;
+
+    @property({ tooltip: 'Mau hao quang quanh nguoi khi max level (maxFx = Aura) + vong sang duoi chan' })
     auraColor = new Color(255, 200, 60, 255);
 
     @property({ type: [Color], tooltip: 'Mau hat nang luong bay quanh nguoi khi max level' })

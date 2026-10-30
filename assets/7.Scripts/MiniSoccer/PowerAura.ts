@@ -1,5 +1,5 @@
 import { _decorator, CCFloat, CCInteger, Color, Component, Node, Sprite, SpriteFrame, Tween, tween, UITransform, Vec3 } from 'cc';
-import { GameEvent, gameEvents, GameManager } from './GameManager';
+import { GameEvent, gameEvents, GameManager, MaxLevelFx } from './GameManager';
 const { ccclass, property } = _decorator;
 
 /**
@@ -92,7 +92,8 @@ export class PowerAura extends Component {
             const to = new Vec3(Math.cos(a) * this.halfWidth * 2.1, cy + Math.sin(a) * this.riseHeight * 0.62, 0);
             this.fly(this.take(i % 2 === 0), from, to, 0.55, 1.3, 'quadOut');
         }
-        const ring = this._ring;
+        // Vong sang duoi chan chi cho kieu Aura (Flash da co bong mo + tia set)
+        const ring = GameManager.Ins?.character?.maxFx === MaxLevelFx.Flash ? null : this._ring;
         if (ring) {
             const n = ring.node, s = this.ringWidth / 90;
             n.active = true;

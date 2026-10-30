@@ -108,8 +108,8 @@ export class GameManager extends Ply_Singleton {
     @property({ type: CCInteger, group: { name: 'Rules' }, tooltip: 'Level toi da (so anh Ronaldo_Lv)' })
     maxLevel = 4;
 
-    @property({ type: CCInteger, group: { name: 'Rules' }, tooltip: 'Level can dat sau cong cuoi de thang' })
-    winLevel = 3;
+    @property({ type: CCInteger, group: { name: 'Rules' }, tooltip: 'Level can dat sau cong cuoi de thang (= maxLevel: phai max moi thang)' })
+    winLevel = 4;
 
     @property({ type: CCFloat, group: { name: 'Rules' }, tooltip: 'Thoi gian chay tu Start toi End (giay)' })
     totalMoveTime = 13;
@@ -180,13 +180,12 @@ export class GameManager extends Ply_Singleton {
         if (GameManager.Ins === this) GameManager.Ins = null;
     }
 
-    /** Bam the nhan vat tren panel chon: ap hinh cho cau thu / cong / Boss roi chay luon. */
+    /** Bam the nhan vat tren panel chon: ap hinh cho cau thu / cong / Boss, cho cham de bat dau (nhu v25). */
     public selectCharacter(index: number): void {
         if (this._state !== GameState.Select || !this.characters[index]) return;
         this._character = index;
         this._state = GameState.Ready;
         gameEvents.emit(GameEvent.CHARACTER_SELECTED, this.character, this.boss);
-        this.startGame();
     }
 
     /** Cham lan dau (sau khi da chon nhan vat). Goi nhieu lan cung chi bat dau 1 lan. */

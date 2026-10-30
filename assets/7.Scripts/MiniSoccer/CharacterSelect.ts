@@ -1,11 +1,11 @@
 import { _decorator, Camera, CCFloat, Component, Node, Tween, tween, UIOpacity, UITransform, Vec3, view } from 'cc';
-import { pc } from '../Manager/PointerController';
 import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
 /**
  * Panel chon nhan vat luc vao game. Gan tren node CharacterSelect (con cua UI, scale 1 = don vi world cua UICam).
- * Cham the thu i -> GameManager.selectCharacter(i) (ap hinh cau thu / cong / Boss roi chay luon) -> an panel.
+ * Cham the thu i -> GameManager.selectCharacter(i) (ap hinh cau thu / cong / Boss) -> an panel, hien lai tutorial;
+ * cham tiep vao man hinh moi bat dau chay (InputManager -> startGame).
  * Nen toi (Dim) gian phu kin man hinh; Content tu scale vua khung nhin (doc lan ngang).
  */
 @ccclass('CharacterSelect')
@@ -65,8 +65,6 @@ export class CharacterSelect extends Component {
     private choose(index: number): void {
         if (this._chosen) return;
         this._chosen = true;
-        // Cham the bi node an mat nen input toan cuc khong nhan: tu goi cham lan dau (tat tutorial, bat nhac nen)
-        pc?.firstMove();
         if (this.hand) { Tween.stopAllByTarget(this.hand); this.hand.active = false; }
         this.cards.forEach((card, i) => {
             Tween.stopAllByTarget(card);

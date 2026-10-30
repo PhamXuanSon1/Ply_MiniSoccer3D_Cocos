@@ -457,7 +457,7 @@
     "_enabled": true,
     "__prefab": null,
     "maxLevel": 4,
-    "winLevel": 3,
+    "winLevel": 4,
     "totalMoveTime": 13,
     "dragSmoothSpeed": 20,
     "dragScreenRatio": 0.5,
@@ -7575,6 +7575,9 @@
     "hideWhileSelecting": [
       {
         "__id__": 209
+      },
+      {
+        "__id__": 44
       }
     ],
     "designWidth": 1020,

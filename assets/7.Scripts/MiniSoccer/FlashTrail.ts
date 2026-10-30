@@ -1,27 +1,27 @@
-import { _decorator, CCFloat, Color, Component, Node, Quat, Sprite, SpriteFrame, Tween, tween, UITransform, Vec3 } from 'cc';
-import { GameEvent, gameEvents, GameManager, GameState, MaxLevelFx } from './GameManager';
+import { _decorator, CCFloat, Color, Node, Quat, Sprite, SpriteFrame, Tween, tween, UITransform, Vec3 } from 'cc';
+import { CharacterFx } from './CharacterFx';
+import { GameManager, GameState } from './GameManager';
+import { PowerAura } from './PowerAura';
 const { ccclass, property } = _decorator;
 
 const _q = new Quat();
 const _v = new Vec3();
 
 /**
- * Hieu ung chay kieu The Flash khi max level (nhan vat co maxFx = Flash, vd Mbappe). Gan tren node Character.
+ * Hieu ung max level kieu The Flash (prefab FX_Mbappe_MaxLevel). Khong co hao quang.
  * - Bong mo (afterimage): moi lan nguoi lach ngang duoc ghostSpacing thi chup lai anh Body, de lai tren duong vua di
- *   -> thanh duoi bong noi tiep phia sau; dung im thi khong tao (tranh bong chong len nguoi). Doi mau xanh lo -> xanh duong roi tan.
- *   Bong nam trong trailLayer (con cua Rig, dat TRUOC Character) nen ve sau nguoi va giu vi tri cu khi keo ngang.
- * - Tia set xanh chop quanh nguoi (boltLayer, con cua Visuals, don vi px anh). Nguoi khong nghieng.
+ *   -> thanh duoi bong noi tiep phia sau; dung im thi khong tao (tranh bong chong len nguoi).
+ *   Bong nam trong trailLayer (trong behindCharacter -> con cua Rig, truoc Character) nen ve sau nguoi va giu vi tri cu.
+ * - Tia set chop quanh nguoi (boltLayer, ve truoc Body, don vi px anh). Nguoi khong nghieng.
+ * - Hat nang luong (PowerAura, tuy chon).
  */
 @ccclass('FlashTrail')
-export class FlashTrail extends Component {
+export class FlashTrail extends CharacterFx {
 
-    @property(Sprite)
-    body: Sprite | null = null;
-
-    @property({ type: Node, tooltip: 'Node chua bong mo: con cua Rig, nam TRUOC Character trong Hierarchy' })
+    @property({ type: Node, tooltip: 'Node chua bong mo (nam trong behindCharacter)' })
     trailLayer: Node | null = null;
 
-    @property({ type: Node, tooltip: 'Node chua tia set: con cua Visuals (ve truoc Body)' })
+    @property({ type: Node, tooltip: 'Node chua tia set (ve truoc Body)' })
     boltLayer: Node | null = null;
 
     @property({ type: [SpriteFrame], tooltip: 'Anh tia set (FX/Flash/Bolt_*)' })
@@ -45,38 +45,40 @@ export class FlashTrail extends Component {
     @property({ type: CCFloat, tooltip: 'So tia set moi giay' })
     boltRate = 9;
 
+    @property({ type: PowerAura, tooltip: 'Hat nang luong (tuy chon)' })
+    power: PowerAura | null = null;
+
     private _on = false;
     private _boltAcc = 0;
     private _ghosts: Sprite[] = [];
     private _boltPool: Sprite[] = [];
     private _ghostX = 0;
 
-    onLoad() {
-        gameEvents.on(GameEvent.LEVEL_CHANGED, this.refresh, this);
-        gameEvents.on(GameEvent.CHARACTER_SELECTED, this.refresh, this);
-    }
-
     onDestroy() {
-        gameEvents.targetOff(this);
         for (const s of [...this._ghosts, ...this._boltPool]) { Tween.stopAllByTarget(s); Tween.stopAllByTarget(s.node); }
+        super.onDestroy();
     }
 
-    private refresh(): void {
-        const gm = GameManager.Ins;
-        const on = !!gm && gm.character?.maxFx === MaxLevelFx.Flash && gm.level >= gm.maxLevel;
-        if (on === this._on) return;
-        this._on = on;
-        this._ghostX = this.node.position.x;
+    public begin(): void {
+        this._on = true;
+        this._ghostX = this.ctx?.character.position.x ?? 0;
+        this.power?.begin();
+    }
+
+    public end(): void {
+        this._on = false;
+        this.power?.end();
     }
 
     update(dt: number) {
-        if (!this._on || !this.body?.node.activeInHierarchy) return;
+        const ctx = this.ctx;
+        if (!this._on || !ctx || !ctx.body.node.activeInHierarchy) return;
         const state = GameManager.Ins?.state;
         if (state !== GameState.Playing && state !== GameState.Ending) return;
 
         // Bong mo theo quang duong lach ngang: lach nhanh hay cham deu ra 1 duoi bong deu nhau, dung im thi khong co
         // Lach xa trong 1 khung (keo nhanh / fps thap) thi rai them bong tren doan vua di de duoi lien mach
-        const x = this.node.position.x, dx = x - this._ghostX;
+        const x = ctx.character.position.x, dx = x - this._ghostX;
         const n = Math.min(12, Math.floor(Math.abs(dx) / this.ghostSpacing));
         for (let i = 1; i <= n; i++) this.spawnGhost(this._ghostX + dx * i / n - x);
         if (n > 0) this._ghostX = x;
@@ -86,7 +88,7 @@ export class FlashTrail extends Component {
 
     /** Chup anh Body hien tai (cung vi tri / scale world, lech ngang offsetX) thanh 1 bong mo, troi ve sau va tan. */
     private spawnGhost(offsetX = 0): void {
-        const body = this.body!, layer = this.trailLayer;
+        const body = this.ctx!.body, layer = this.trailLayer;
         if (!layer || !body.spriteFrame) return;
         const sp = this.take(this._ghosts, layer);
         const n = sp.node, bt = body.getComponent(UITransform)!;
@@ -101,7 +103,7 @@ export class FlashTrail extends Component {
         const p = n.position;
         tween(sp).to(this.ghostLife, { color: this.ghostEnd }, { easing: 'quadIn' }).start();
         tween(n).to(this.ghostLife, { position: _v.set(p.x, p.y, p.z + this.ghostDrift).clone() }, { easing: 'quadOut' })
-            .call(() => this.release(this._ghosts, sp)).start();
+            .call(() => this.release(sp)).start();
     }
 
     /** Tia set chop 2 nhip roi tat, vi tri / goc / co ngau nhien quanh nguoi. */
@@ -122,7 +124,7 @@ export class FlashTrail extends Component {
             .delay(0.05).set({ color: off })
             .delay(0.04).set({ color: on })
             .to(0.12, { color: off })
-            .call(() => this.release(this._boltPool, sp))
+            .call(() => this.release(sp))
             .start();
     }
 
@@ -140,7 +142,7 @@ export class FlashTrail extends Component {
         return sp;
     }
 
-    private release(_pool: Sprite[], sp: Sprite): void {
+    private release(sp: Sprite): void {
         Tween.stopAllByTarget(sp);
         Tween.stopAllByTarget(sp.node);
         sp.node.active = false;

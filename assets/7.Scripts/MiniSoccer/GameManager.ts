@@ -1,4 +1,4 @@
-import { _decorator, CCFloat, CCInteger, Color, director, Enum, EventTarget, game, Game, SpriteFrame } from 'cc';
+import { _decorator, CCFloat, CCInteger, director, Enum, EventTarget, game, Game, Prefab, SpriteFrame } from 'cc';
 import { PREVIEW } from 'cc/env';
 import { Ply_Singleton } from '../ScriptTemplate/Ply_Singleton';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
@@ -44,13 +44,6 @@ export const GameEvent = {
 
 export const gameEvents = new EventTarget();
 
-/** Hieu ung khi cau thu dat max level. */
-export enum MaxLevelFx {
-    Aura = 0,   // hao quang theo dang nguoi, tho nhe (Yamal)
-    Flash = 1,  // chay kieu The Flash: bong mo phia sau + tia set (Mbappe), khong hao quang
-}
-Enum(MaxLevelFx);
-
 /** Bo hinh cua 1 nhan vat chon duoc (Mbappe / Yamal). Nhan vat con lai lam Boss. */
 @ccclass('CharacterConfig')
 export class CharacterConfig {
@@ -63,14 +56,8 @@ export class CharacterConfig {
     @property({ type: CharacterFrame, tooltip: 'Anh ket qua khi nhan vat nay thang (cung dung khi no la Boss va nguoi choi thua)' })
     win = new CharacterFrame();
 
-    @property({ type: MaxLevelFx, tooltip: 'Kieu hieu ung khi max level' })
-    maxFx = MaxLevelFx.Aura;
-
-    @property({ tooltip: 'Mau hao quang quanh nguoi khi max level (maxFx = Aura) + vong sang duoi chan' })
-    auraColor = new Color(255, 200, 60, 255);
-
-    @property({ type: [Color], tooltip: 'Mau hat nang luong bay quanh nguoi khi max level' })
-    particleColors: Color[] = [];
+    @property({ type: Prefab, tooltip: 'Prefab hieu ung max level rieng cua nhan vat (5.Prefabs/MiniSoccer/FX/FX_*_MaxLevel)' })
+    maxLevelFx: Prefab | null = null;
 
     @property({ type: SpriteFrame, tooltip: 'Item tren cong xanh (tang level)' })
     increaseVisual: SpriteFrame | null = null;

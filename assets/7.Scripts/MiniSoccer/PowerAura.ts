@@ -1,15 +1,12 @@
 import { _decorator, CCFloat, CCInteger, Color, Component, Node, Sprite, SpriteFrame, Tween, tween, UITransform, Vec3 } from 'cc';
-import { GameEvent, gameEvents, GameManager, MaxLevelFx } from './GameManager';
 const { ccclass, property } = _decorator;
 
 /**
- * Hieu ung "full power" cua cau thu khi dat max level (thay ParticleSystem PowerFullPar cu).
- * Gan tren node PowerFullPar (con cua Visuals, ve truoc Body); backLayer la node ve sau Body.
- * Don vi = pixel anh Body (goc o chan). Sprite tao luc chay, dung lai (pool), khong can dat san trong scene.
- * - Vua len max: bung 1 vong hat ra xung quanh + vong sang duoi chan.
- * - Giu max: hat nang luong bay tu chan len (nua truoc, nua sau Body), sao lap lanh quanh nguoi, vong sang nhip tho.
- * - Tut level: ngung phun, hat dang bay tu tat.
- * Mau hat lay theo nhan vat (CharacterConfig.particleColors), khong co thi dung colors.
+ * Hat nang luong quanh cau thu khi max level. Dung ben trong prefab hieu ung nhan vat (AuraFx / FlashTrail goi begin/end).
+ * Node chua component ve truoc Body; backLayer (node trong CharacterFx.behindBody) ve sau Body.
+ * Don vi = pixel anh Body (goc o chan). Sprite tao luc chay, dung lai (pool).
+ * - begin(): bung 1 vong hat ra xung quanh (+ vong sang duoi chan neu showRing), roi phun hat bay len + sao lap lanh.
+ * - end(): ngung phun, hat dang bay tu tat, vong sang mo dan.
  */
 @ccclass('PowerAura')
 export class PowerAura extends Component {
@@ -23,10 +20,13 @@ export class PowerAura extends Component {
     @property({ type: SpriteFrame, tooltip: 'Sao lap lanh (Star)' })
     star: SpriteFrame | null = null;
 
-    @property({ type: [Color], tooltip: 'Mau hat mac dinh (nhan vat khong dat particleColors)' })
+    @property({ type: [Color], tooltip: 'Mau hat (chon ngau nhien); mau dau tien cung la mau sao' })
     colors: Color[] = [new Color(255, 190, 0, 255), new Color(255, 120, 20, 255), new Color(0, 200, 255, 255)];
 
-    @property({ tooltip: 'Mau vong sang duoi chan mac dinh (nhan vat co auraColor thi dung mau do)' })
+    @property({ tooltip: 'Hien vong sang duoi chan' })
+    showRing = true;
+
+    @property({ tooltip: 'Mau vong sang duoi chan' })
     ringColor = new Color(255, 170, 0, 235);
 
     @property({ type: CCFloat, tooltip: 'So hat phun moi giay khi giu max level' })
@@ -52,16 +52,13 @@ export class PowerAura extends Component {
     private _starAcc = 0;
     private _pool: Sprite[] = [];
     private _ring: Sprite | null = null;
-    private _colors: Color[] = [];
 
     onLoad() {
-        gameEvents.on(GameEvent.LEVEL_CHANGED, this.onLevelChanged, this);
         this._ring = this.make(this.backLayer ?? this.node, this.glow);
         this._ring.node.active = false;
     }
 
     onDestroy() {
-        gameEvents.targetOff(this);
         for (const s of [...this._pool, this._ring]) if (s) { Tween.stopAllByTarget(s); Tween.stopAllByTarget(s.node); }
     }
 
@@ -73,17 +70,9 @@ export class PowerAura extends Component {
         while (this._starAcc >= 1) { this._starAcc--; this.spawnStar(); }
     }
 
-    private onLevelChanged(level: number): void {
-        const on = level >= (GameManager.Ins?.maxLevel ?? 4);
-        if (on === this._on) return;
-        this._on = on;
-        if (on) this.begin(); else this.end();
-    }
-
-    private begin(): void {
+    public begin(): void {
+        this._on = true;
         this._acc = this._starAcc = 0;
-        const own = GameManager.Ins?.character?.particleColors;
-        this._colors = own && own.length > 0 ? own : this.colors;
         // Bung 1 vong hat quanh than nguoi (tam o giua nguoi)
         const cy = this.riseHeight * 0.48;
         for (let i = 0; i < this.burstCount; i++) {
@@ -92,18 +81,17 @@ export class PowerAura extends Component {
             const to = new Vec3(Math.cos(a) * this.halfWidth * 2.1, cy + Math.sin(a) * this.riseHeight * 0.62, 0);
             this.fly(this.take(i % 2 === 0), from, to, 0.55, 1.3, 'quadOut');
         }
-        // Vong sang duoi chan chi cho kieu Aura (Flash da co bong mo + tia set)
-        const ring = GameManager.Ins?.character?.maxFx === MaxLevelFx.Flash ? null : this._ring;
+        const ring = this.showRing ? this._ring : null;
         if (ring) {
             const n = ring.node, s = this.ringWidth / 90;
             n.active = true;
             n.setPosition(0, 0, 0);
             Tween.stopAllByTarget(n);
             Tween.stopAllByTarget(ring);
-            const rc = GameManager.Ins?.character?.auraColor ?? this.ringColor;
+            const rc = this.ringColor;
             ring.color = this.alpha(rc, 0);
             n.setScale(s * 2, s * 0.6, 1);
-            tween(ring).to(0.3, { color: this.alpha(rc, 235) }).start();
+            tween(ring).to(0.3, { color: rc }).start();
             tween(n).to(0.3, { scale: new Vec3(s * 9, s * 2.2, 1) }, { easing: 'backOut' })
                 .then(tween(n)
                     .to(0.6, { scale: new Vec3(s * 10, s * 2.5, 1) }, { easing: 'sineInOut' })
@@ -113,7 +101,8 @@ export class PowerAura extends Component {
         }
     }
 
-    private end(): void {
+    public end(): void {
+        this._on = false;
         const ring = this._ring;
         if (ring?.node.active) {
             Tween.stopAllByTarget(ring);
@@ -141,7 +130,7 @@ export class PowerAura extends Component {
         n.setPosition((Math.random() * 2 - 1) * this.halfWidth * 1.25, this.riseHeight * (0.15 + Math.random() * 0.85), 0);
         n.setScale(0, 0, 1);
         n.setRotationFromEuler(0, 0, Math.random() * 90);
-        sp.color = this.alpha(this._colors[0] ?? Color.WHITE, 255);
+        sp.color = this.alpha(this.colors[0] ?? Color.WHITE, 255);
         tween(n)
             .to(0.18, { scale: new Vec3(k, k, 1) }, { easing: 'backOut' })
             .delay(0.12)
@@ -151,7 +140,7 @@ export class PowerAura extends Component {
     }
 
     private fly(sp: Sprite, from: Vec3, to: Vec3, time: number, size: number, easing: 'quadOut' | 'sineOut', spin = 0): void {
-        const n = sp.node, k = size * this.particleSize / 10, c = this._colors[Math.floor(Math.random() * this._colors.length)] ?? Color.WHITE;
+        const n = sp.node, k = size * this.particleSize / 10, c = this.colors[Math.floor(Math.random() * this.colors.length)] ?? Color.WHITE;
         n.setPosition(from);
         n.setScale(k, k, 1);
         n.setRotationFromEuler(0, 0, 0);

@@ -3,11 +3,15 @@ const { ccclass, property } = _decorator;
 
 /**
  * Hieu ung lam dep anh thang (Ronaldo ngai vang): chop sang -> tia sang xoay + hao quang nhip tho + sao lap lanh.
- * Gan tren node WinFx (con cua Boss). EndSequence goi play() luc hien anh ket qua khi thang.
- * Cac node con dat san trong scene; script chi bat va chay tween.
+ * Gan tren goc prefab FX_Win (con cua Boss, dat SAU anh ket qua). EndSequence goi play() luc hien anh ket qua khi thang.
+ * Nhom back (Rays, Glow) duoc dua ra lam con dau tien cua Boss luc onLoad de ve SAU anh ket qua; con lai ve truoc.
+ * Cac node con dat san trong prefab; script chi bat va chay tween.
  */
 @ccclass('WinShowcase')
 export class WinShowcase extends Component {
+
+    @property({ type: Node, tooltip: 'Nhom ve SAU anh ket qua (chua rays + glow), duoc dua ra dau Boss khi chay' })
+    back: Node | null = null;
 
     @property({ type: Sprite, tooltip: 'Tia sang xoay cham sau anh' })
     rays: Sprite | null = null;
@@ -28,6 +32,10 @@ export class WinShowcase extends Component {
     private _scales = new Map<Node, Vec3>();
 
     onLoad() {
+        if (this.back && this.node.parent) {
+            this.back.setParent(this.node.parent, true);
+            this.back.setSiblingIndex(0);
+        }
         for (const s of this.all()) {
             this._scales.set(s.node, s.node.scale.clone());
             s.node.active = false;

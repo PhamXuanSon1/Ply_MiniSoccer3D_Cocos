@@ -1,6 +1,7 @@
 import { _decorator, CCFloat, CCInteger, CCObject, Color, Component, director, Enum, Node, Sprite, UITransform } from 'cc';
 import { EDITOR } from 'cc/env';
 import { applyFrame, applyGlow, CharacterFrame, FrameBase } from './CharacterFrame';
+import { AuraFx } from './AuraFx';
 import { CharacterConfig, GameManager } from './GameManager';
 import { PlayerVisual } from './PlayerVisual';
 const { ccclass, property, executeInEditMode } = _decorator;
@@ -20,7 +21,8 @@ Enum(TunerCompare);
  *  2. Chon compare = 1 anh khac -> anh do ve mo phia sau de so kich thuoc / vi tri chan.
  *  3. Sua scale / offset cua anh dang xem trong GameManager > Characters > levels[i] (hoac win): Scene cap nhat ngay.
  *     Muc tieu: moi anh cao bang nhau, chan cham dat (goc node Character). Tang dan theo level do levelScales lo.
- *  4. [Prev] / [Next] de chuyen anh nhanh. showAura de xem hao quang max level khop dang nguoi chua.
+ *  4. [Prev] / [Next] de chuyen anh nhanh. showAura de xem anh glow (hao quang max level) khop dang nguoi chua
+ *     (mau lay tu AuraFx trong prefab maxLevelFx neu co).
  * Body phai dat o goc Visuals (vi tri 0, scale 1): game va cong cu deu ap scale/offset tu goc nay.
  */
 @ccclass('CharacterTuner')
@@ -67,6 +69,7 @@ export class CharacterTuner extends Component {
     private _showAura = false;
 
     private _ghost: Sprite | null = null;
+    private _aura: Sprite | null = null;
 
     onEnable() {
         if (EDITOR) this.refresh();
@@ -74,7 +77,8 @@ export class CharacterTuner extends Component {
 
     onDisable() {
         this._ghost?.node.destroy();
-        this._ghost = null;
+        this._aura?.node.destroy();
+        this._ghost = this._aura = null;
     }
 
     update() {
@@ -98,20 +102,18 @@ export class CharacterTuner extends Component {
         const f = this.pick(cfg, this._frame);
         applyFrame(body, f, base);
 
-        const aura = pv!.aura;
-        if (aura) {
-            aura.node.active = this._showAura && !!f?.glow;
-            if (aura.node.active) {
-                const ab = new FrameBase();
-                ab.pos.z = aura.node.position.z;
-                applyGlow(aura, f, body, ab);
-                const c = cfg.auraColor;
-                aura.color = new Color(c.r, c.g, c.b, c.a);
-            }
+        const aura = this._aura = this.preview(this._aura, 'TunerAura', body, body.node.getSiblingIndex());
+        aura.node.active = this._showAura && !!f?.glow;
+        if (aura.node.active) {
+            const ab = new FrameBase();
+            ab.pos.z = body.node.position.z - 1;
+            applyGlow(aura, f, body, ab);
+            const c = cfg.maxLevelFx?.data?.getComponent(AuraFx)?.auraColor ?? new Color(255, 255, 255, 200);
+            aura.color = new Color(c.r, c.g, c.b, c.a);
         }
 
         const g = this._compare === TunerCompare.None ? null : this.pick(cfg, this._compare - 1);
-        const ghost = this.ghost(body);
+        const ghost = this._ghost = this.preview(this._ghost, 'TunerGhost', body, 0);
         ghost.node.active = !!g;
         if (g) {
             const gb = new FrameBase();
@@ -130,17 +132,16 @@ export class CharacterTuner extends Component {
         return frame === TunerFrame.Win ? cfg.win : cfg.levels[frame] ?? null;
     }
 
-    /** Sprite so sanh: khong luu vao scene, an khoi Hierarchy, anchor giong Body. */
-    private ghost(body: Sprite): Sprite {
-        if (this._ghost?.isValid) return this._ghost;
-        const n = new Node('TunerGhost');
+    /** Sprite xem truoc (so sanh / hao quang): khong luu vao scene, an khoi Hierarchy, anchor giong Body. */
+    private preview(cur: Sprite | null, name: string, body: Sprite, index: number): Sprite {
+        if (cur?.isValid) return cur;
+        const n = new Node(name);
         n._objFlags |= CCObject.Flags.DontSave | CCObject.Flags.HideInHierarchy;
         n.layer = body.node.layer;
         n.setParent(body.node.parent);
-        n.setSiblingIndex(0);
+        n.setSiblingIndex(index);
         const ut = n.addComponent(UITransform), b = body.getComponent(UITransform)!;
         ut.setAnchorPoint(b.anchorX, b.anchorY);
-        this._ghost = n.addComponent(Sprite);
-        return this._ghost;
+        return n.addComponent(Sprite);
     }
 }

@@ -1,7 +1,8 @@
 import { _decorator, CCFloat, Component, Node, ParticleSystem, Sprite, Tween, tween, Vec3 } from 'cc';
 import { ui } from '../Manager/UI';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
-import { CharacterConfig, GameEvent, gameEvents, GameManager, setSpriteKeepHeight } from './GameManager';
+import { applyFrame, FrameBase } from './CharacterFrame';
+import { CharacterConfig, GameEvent, gameEvents, GameManager } from './GameManager';
 import { WinShowcase } from './WinShowcase';
 const { ccclass, property } = _decorator;
 
@@ -10,15 +11,13 @@ const { ccclass, property } = _decorator;
  * delay -> an Boss + cau thu, bat may danh nhau -> fightDuration -> hien anh ket qua (+ WinPar khi thang)
  * -> showResultDuration -> an HUD, bat endcard Win/Lose (ui.onWin/onLose, cham la vao store).
  * Thoi gian va anh ket qua lay tu GameManager. Boss = nhan vat khong duoc chon (anh level cao nhat).
+ * Anh Boss / ket qua giu kich thuoc goc, ap scale/offset rieng tung anh (CharacterFrame) tren scale goc cua node.
  */
 @ccclass('EndSequence')
 export class EndSequence extends Component {
 
     @property(Node)
     bossVisual: Node | null = null;
-
-    @property({ type: CCFloat, tooltip: 'Chieu cao hien thi anh Boss / anh ket qua (anh cac nhan vat co kich thuoc goc khac nhau)' })
-    spriteHeight = 512;
 
     @property({ type: Node, tooltip: 'Hinh cau thu (Character/Visuals)' })
     characterVisual: Node | null = null;
@@ -41,6 +40,9 @@ export class EndSequence extends Component {
     @property({ type: Node, tooltip: 'Bat cung anh ket qua khi thang (WinPar)' })
     winFx: Node | null = null;
 
+    @property({ type: Sprite, tooltip: 'Anh chinh endcard Lose (Lose/Content/MainImg): doi thanh anh thang cua Boss' })
+    loseEndcardImage: Sprite | null = null;
+
     @property({ type: [Node], tooltip: 'An khi bat may danh nhau (o chon tren HUD)' })
     hideOnFight: Node[] = [];
 
@@ -48,10 +50,14 @@ export class EndSequence extends Component {
     hideOnEndcard: Node[] = [];
 
     private _started = false;
-    private _resultScale = new Vec3();
+    private _resultBase = new FrameBase();
+    private _bossBase = new FrameBase();
+    private _loseBase = new FrameBase();
 
     onLoad() {
-        if (this.result) this._resultScale.set(this.result.node.scale);
+        this._resultBase = new FrameBase(this.result?.node);
+        this._bossBase = new FrameBase(this.bossVisual);
+        this._loseBase = new FrameBase(this.loseEndcardImage?.node);
         for (const n of [this.fightingCloud, this.result?.node, this.winFx]) if (n) n.active = false;
         gameEvents.on(GameEvent.CHARACTER_SELECTED, this.applyBoss, this);
         gameEvents.on(GameEvent.FINISHED, this.onFinished, this);
@@ -68,7 +74,8 @@ export class EndSequence extends Component {
 
     private applyBoss(_character: CharacterConfig, boss: CharacterConfig): void {
         const sp = this.bossVisual?.getComponent(Sprite);
-        if (sp) setSpriteKeepHeight(sp, boss.bossSprite, this.spriteHeight);
+        if (sp) applyFrame(sp, boss.boss, this._bossBase);
+        if (this.loseEndcardImage) applyFrame(this.loseEndcardImage, boss.win, this._loseBase);
     }
 
     private onFinished(isWin: boolean): void {
@@ -93,10 +100,9 @@ export class EndSequence extends Component {
         const gm = GameManager.Ins!;
         if (this.fightingCloud) this.fightingCloud.active = false;
         if (this.result) {
-            setSpriteKeepHeight(this.result, isWin ? gm.resultWin : gm.resultLose, this.spriteHeight);
-            const k = isWin ? this.winScale : this.loseScale;
-            const target = Vec3.multiplyScalar(new Vec3(), this._resultScale, k);
+            applyFrame(this.result, isWin ? gm.resultWin : gm.resultLose, this._resultBase, isWin ? this.winScale : this.loseScale);
             const node = this.result.node;
+            const target = node.scale.clone();
             node.active = true;
             // Nay vao: nho -> vuot 1.1 -> ve dung kich thuoc
             Tween.stopAllByTarget(node);

@@ -98,7 +98,7 @@ export class CharacterSelect extends Component {
         const hand = this.hand, card = this.cards[i];
         if (!hand || !card || this._chosen) return;
         const p = card.position;
-        const target = new Vec3(p.x + 50, p.y - 40, hand.position.z);
+        const target = new Vec3(p.x + 50, p.y + 40, hand.position.z);
         const op = hand.getComponent(UIOpacity) ?? hand.addComponent(UIOpacity);
         Tween.stopAllByTarget(hand);
         Tween.stopAllByTarget(op);

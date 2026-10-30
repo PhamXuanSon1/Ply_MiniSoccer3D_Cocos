@@ -1,8 +1,9 @@
-import { _decorator, CCFloat, CCInteger, director, Enum, EventTarget, game, Game, Sprite, SpriteFrame, UITransform } from 'cc';
+import { _decorator, CCFloat, CCInteger, Color, director, Enum, EventTarget, game, Game, SpriteFrame } from 'cc';
 import { PREVIEW } from 'cc/env';
 import { Ply_Singleton } from '../ScriptTemplate/Ply_Singleton';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
 import { gc, GameController } from '../Tool/GameController';
+import { CharacterFrame } from './CharacterFrame';
 const { ccclass, property } = _decorator;
 
 /** Loai bang chon: tang hoac giam 1 level (EChoiceType ben Unity). */
@@ -49,11 +50,17 @@ export class CharacterConfig {
     @property
     name = '';
 
-    @property({ type: [SpriteFrame], tooltip: 'Anh cau thu theo level (phan tu 0 = Lv1); anh cuoi cung lam Boss' })
-    levelSprites: SpriteFrame[] = [];
+    @property({ type: [CharacterFrame], tooltip: 'Anh cau thu theo level (phan tu 0 = Lv1); anh cuoi cung lam Boss' })
+    levels: CharacterFrame[] = [];
 
-    @property({ type: SpriteFrame, tooltip: 'Anh ket qua khi nhan vat nay thang (cung dung khi no la Boss va nguoi choi thua)' })
-    winSprite: SpriteFrame | null = null;
+    @property({ type: CharacterFrame, tooltip: 'Anh ket qua khi nhan vat nay thang (cung dung khi no la Boss va nguoi choi thua)' })
+    win = new CharacterFrame();
+
+    @property({ tooltip: 'Mau hao quang quanh nguoi khi max level' })
+    auraColor = new Color(255, 200, 60, 255);
+
+    @property({ type: [Color], tooltip: 'Mau hat nang luong bay quanh nguoi khi max level' })
+    particleColors: Color[] = [];
 
     @property({ type: SpriteFrame, tooltip: 'Item tren cong xanh (tang level)' })
     increaseVisual: SpriteFrame | null = null;
@@ -67,21 +74,15 @@ export class CharacterConfig {
     @property({ type: CCFloat, tooltip: 'Scale node Visual cua item cong do' })
     decreaseScale = 1;
 
-    /** Anh Boss = level cao nhat. */
-    public get bossSprite(): SpriteFrame | null {
-        return this.levelSprites[this.levelSprites.length - 1] ?? null;
+    /** Anh theo level (1..n), ngoai khoang thi kep lai. */
+    public level(level: number): CharacterFrame | null {
+        return this.levels[Math.min(this.levels.length, Math.max(1, level)) - 1] ?? null;
     }
-}
 
-/** Doi anh ma giu nguyen chieu cao hien thi (anh cac nhan vat co kich thuoc goc khac nhau). */
-export function setSpriteKeepHeight(sprite: Sprite, frame: SpriteFrame | null, height: number): void {
-    sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-    // Kich thuoc tinh theo originalSize nen khong trim (trim se keo gian phan anh da cat vien)
-    sprite.trim = false;
-    sprite.spriteFrame = frame;
-    if (!frame) return;
-    const src = frame.originalSize;
-    sprite.getComponent(UITransform)?.setContentSize(src.width * height / src.height, height);
+    /** Anh Boss = level cao nhat. */
+    public get boss(): CharacterFrame | null {
+        return this.levels[this.levels.length - 1] ?? null;
+    }
 }
 
 /**
@@ -135,10 +136,9 @@ export class GameManager extends Ply_Singleton {
     /** Nhan vat dang choi (truoc khi chon = nhan vat 0, de hien san sau panel chon). */
     public get character(): CharacterConfig { return this.characters[this._character]; }
     public get boss(): CharacterConfig { return this.characters[1 - this._character]; }
-    public get levelSprites(): SpriteFrame[] { return this.character?.levelSprites ?? []; }
-    public get resultWin(): SpriteFrame | null { return this.character?.winSprite ?? null; }
+    public get resultWin(): CharacterFrame | null { return this.character?.win ?? null; }
     /** Thua thi hien anh thang cua Boss. */
-    public get resultLose(): SpriteFrame | null { return this.boss?.winSprite ?? null; }
+    public get resultLose(): CharacterFrame | null { return this.boss?.win ?? null; }
     public get level(): number { return this._level; }
     public get isPlaying(): boolean { return this._state === GameState.Playing; }
     /** Con keo ngang duoc: dang chay qua cong hoac da qua cong cuoi nhung chua hien endcard. */

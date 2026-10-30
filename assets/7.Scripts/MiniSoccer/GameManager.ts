@@ -1,4 +1,4 @@
-import { _decorator, CCFloat, CCInteger, director, Enum, EventTarget, game, Game, SpriteFrame } from 'cc';
+import { _decorator, CCFloat, CCInteger, director, Enum, EventTarget, game, Game, Sprite, SpriteFrame, UITransform } from 'cc';
 import { PREVIEW } from 'cc/env';
 import { Ply_Singleton } from '../ScriptTemplate/Ply_Singleton';
 import { FxType, Ply_SoundManager } from '../ScriptTemplate/Ply_SoundManager';
@@ -13,6 +13,7 @@ export enum ChoiceType {
 Enum(ChoiceType);
 
 export enum GameState {
+    Select,     // dang chon nhan vat
     Ready,      // cho cham lan dau
     Playing,    // dang chay qua cac cong
     Ending,     // da chot ket qua o cong cuoi, dang dien canh danh Boss
@@ -24,6 +25,8 @@ export enum GameState {
  * Thay cho cac static Action rai rac ben Unity (GameManager.OnGameStart, UIManager.OnCharacterChoose...).
  */
 export const GameEvent = {
+    /** (character: CharacterConfig, boss: CharacterConfig) - Vua chon nhan vat (Boss = nhan vat con lai). */
+    CHARACTER_SELECTED: 'character-selected',
     /** () - Cham lan dau, cau thu bat dau chay. */
     START: 'game-start',
     /** (index: number, total: number, type: ChoiceType, visual: SpriteFrame | null) - Vua qua cong thu index. */
@@ -40,6 +43,47 @@ export const GameEvent = {
 
 export const gameEvents = new EventTarget();
 
+/** Bo hinh cua 1 nhan vat chon duoc (Mbappe / Yamal). Nhan vat con lai lam Boss. */
+@ccclass('CharacterConfig')
+export class CharacterConfig {
+    @property
+    name = '';
+
+    @property({ type: [SpriteFrame], tooltip: 'Anh cau thu theo level (phan tu 0 = Lv1); anh cuoi cung lam Boss' })
+    levelSprites: SpriteFrame[] = [];
+
+    @property({ type: SpriteFrame, tooltip: 'Anh ket qua khi nhan vat nay thang (cung dung khi no la Boss va nguoi choi thua)' })
+    winSprite: SpriteFrame | null = null;
+
+    @property({ type: SpriteFrame, tooltip: 'Item tren cong xanh (tang level)' })
+    increaseVisual: SpriteFrame | null = null;
+
+    @property({ type: CCFloat, tooltip: 'Scale node Visual cua item cong xanh' })
+    increaseScale = 1;
+
+    @property({ type: SpriteFrame, tooltip: 'Item tren cong do (giam level)' })
+    decreaseVisual: SpriteFrame | null = null;
+
+    @property({ type: CCFloat, tooltip: 'Scale node Visual cua item cong do' })
+    decreaseScale = 1;
+
+    /** Anh Boss = level cao nhat. */
+    public get bossSprite(): SpriteFrame | null {
+        return this.levelSprites[this.levelSprites.length - 1] ?? null;
+    }
+}
+
+/** Doi anh ma giu nguyen chieu cao hien thi (anh cac nhan vat co kich thuoc goc khac nhau). */
+export function setSpriteKeepHeight(sprite: Sprite, frame: SpriteFrame | null, height: number): void {
+    sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+    // Kich thuoc tinh theo originalSize nen khong trim (trim se keo gian phan anh da cat vien)
+    sprite.trim = false;
+    sprite.spriteFrame = frame;
+    if (!frame) return;
+    const src = frame.originalSize;
+    sprite.getComponent(UITransform)?.setContentSize(src.width * height / src.height, height);
+}
+
 /**
  * Luat choi + thoi gian + trang thai game o 1 cho. Chi GameManager quyet dinh level va thang/thua.
  * Gia tri mac dinh lay tu scene Unity (tru maxLevel/winLevel/totalMoveTime da chinh cho ban ply25).
@@ -51,7 +95,7 @@ export class GameManager extends Ply_Singleton {
 
     // ---- Rules ----
     @property({ type: CCInteger, group: { name: 'Rules' }, tooltip: 'Level toi da (so anh Ronaldo_Lv)' })
-    maxLevel = 5;
+    maxLevel = 4;
 
     @property({ type: CCInteger, group: { name: 'Rules' }, tooltip: 'Level can dat sau cong cuoi de thang' })
     winLevel = 3;
@@ -79,20 +123,22 @@ export class GameManager extends Ply_Singleton {
     @property({ type: CCFloat, group: { name: 'End' }, tooltip: 'Thoi gian hien ket qua truoc khi bat endcard' })
     showResultDuration = 3.5;
 
-    // ---- Sprites ----
-    @property({ type: [SpriteFrame], group: { name: 'Sprites' }, tooltip: 'Anh cau thu theo level (phan tu 0 = Lv1)' })
-    levelSprites: SpriteFrame[] = [];
+    // ---- Characters ----
+    @property({ type: [CharacterConfig], group: { name: 'Characters' }, tooltip: '2 nhan vat chon duoc; nhan vat khong chon lam Boss' })
+    characters: CharacterConfig[] = [];
 
-    @property({ type: SpriteFrame, group: { name: 'Sprites' } })
-    resultWin: SpriteFrame | null = null;
-
-    @property({ type: SpriteFrame, group: { name: 'Sprites' } })
-    resultLose: SpriteFrame | null = null;
-
-    private _state = GameState.Ready;
+    private _state = GameState.Select;
     private _level = 1;
+    private _character = 0;
 
     public get state(): GameState { return this._state; }
+    /** Nhan vat dang choi (truoc khi chon = nhan vat 0, de hien san sau panel chon). */
+    public get character(): CharacterConfig { return this.characters[this._character]; }
+    public get boss(): CharacterConfig { return this.characters[1 - this._character]; }
+    public get levelSprites(): SpriteFrame[] { return this.character?.levelSprites ?? []; }
+    public get resultWin(): SpriteFrame | null { return this.character?.winSprite ?? null; }
+    /** Thua thi hien anh thang cua Boss. */
+    public get resultLose(): SpriteFrame | null { return this.boss?.winSprite ?? null; }
     public get level(): number { return this._level; }
     public get isPlaying(): boolean { return this._state === GameState.Playing; }
     /** Con keo ngang duoc: dang chay qua cong hoac da qua cong cuoi nhung chua hien endcard. */
@@ -124,7 +170,16 @@ export class GameManager extends Ply_Singleton {
         if (GameManager.Ins === this) GameManager.Ins = null;
     }
 
-    /** Cham lan dau. Goi nhieu lan cung chi bat dau 1 lan. */
+    /** Bam the nhan vat tren panel chon: ap hinh cho cau thu / cong / Boss roi chay luon. */
+    public selectCharacter(index: number): void {
+        if (this._state !== GameState.Select || !this.characters[index]) return;
+        this._character = index;
+        this._state = GameState.Ready;
+        gameEvents.emit(GameEvent.CHARACTER_SELECTED, this.character, this.boss);
+        this.startGame();
+    }
+
+    /** Cham lan dau (sau khi da chon nhan vat). Goi nhieu lan cung chi bat dau 1 lan. */
     public startGame(): void {
         if (this._state !== GameState.Ready) return;
         this._state = GameState.Playing;

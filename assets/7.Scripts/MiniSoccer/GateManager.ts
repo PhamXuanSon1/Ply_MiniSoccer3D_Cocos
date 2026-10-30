@@ -1,6 +1,6 @@
 import { _decorator, CCBoolean, CCFloat, CCInteger, Color, Component, instantiate, Node, Prefab, Sprite, SpriteFrame, tween, UITransform, Vec3 } from 'cc';
 import { EDITOR } from 'cc/env';
-import { ChoiceType, GameManager } from './GameManager';
+import { CharacterConfig, ChoiceType, GameEvent, gameEvents, GameManager } from './GameManager';
 import { PlayerController } from './PlayerController';
 const { ccclass, property } = _decorator;
 
@@ -21,7 +21,8 @@ export class GateChoiceStyle {
  * Quan ly 5 cong chon (gop ChoiceBoardPlacer + ChoiceBoardHolder + ChoiceBoard ben Unity).
  * - Trong editor: bam [Build Gates] de sinh cong tu prefab Gate, dat cach deu; chinh tay tung cong sau do neu muon.
  * - Khi choi: dung dung cac cong dang co trong node nay (khong sinh them), kiem tra cau thu qua cong theo truc z.
- * Prefab Gate: Board_L / Board_R, moi bang co con Border (vien, ve truoc) + Visual (hinh). Loai bang suy ra tu hinh Visual.
+ * Prefab Gate: Board_L / Board_R, moi bang co con Border (vien, ve truoc) + Visual (hinh). Loai bang suy ra tu vien
+ * (item tren cong doi theo nhan vat da chon, vd qua bong la cong do voi Mbappe nhung cong xanh voi Yamal).
  * Sprite cong dung 2D_NoDepthWrite: vien mo dan khong che mat cong phia sau; node Gate xep xa -> gan de ve dung thu tu.
  */
 @ccclass('GateManager')
@@ -66,10 +67,32 @@ export class GateManager extends Component {
     private _gates: Node[] = [];
     private _next = 0;
 
+    onLoad() {
+        gameEvents.on(GameEvent.CHARACTER_SELECTED, this.applyCharacter, this);
+    }
+
     start() {
         // Thu tu qua cong theo z (gan -> xa), khong phu thuoc thu tu node
         this._gates = this.node.children.filter(n => n.active).sort((a, b) => b.worldPosition.z - a.worldPosition.z);
         this._next = 0;
+        const character = GameManager.Ins?.character;
+        if (character) this.applyCharacter(character);
+    }
+
+    onDestroy() {
+        gameEvents.targetOff(this);
+    }
+
+    /** Doi item tren moi bang theo nhan vat: bang vien xanh -> increaseVisual, vien do -> decreaseVisual. */
+    public applyCharacter(character: CharacterConfig): void {
+        for (const gate of this.node.children) {
+            for (const name of ['Board_L', 'Board_R']) {
+                const board = gate.getChildByName(name);
+                if (!board) continue;
+                const inc = this.typeOf(board) === ChoiceType.Increase;
+                this.setVisual(board, inc ? character.increaseVisual : character.decreaseVisual, inc ? character.increaseScale : character.decreaseScale);
+            }
+        }
     }
 
     update() {
@@ -84,17 +107,10 @@ export class GateManager extends Component {
         }
     }
 
-    /**
-     * Loai bang: so hinh Visual voi Style Increase/Decrease (theo uuid); hinh khong khop ca hai
-     * (vd doi anh Style ma chua Build lai) thi xet theo vien: vien Increase = bang tang.
-     */
+    /** Loai bang theo vien: vien Increase = bang tang (hinh Visual doi theo nhan vat nen khong dung de xet). */
     public typeOf(board: Node): ChoiceType {
-        const same = (a: SpriteFrame | null | undefined, b: SpriteFrame | null) => !!a && !!b && a.uuid === b.uuid;
-        const visual = this.visualOf(board)?.spriteFrame;
-        if (same(visual, this.increase.visual)) return ChoiceType.Increase;
-        if (same(visual, this.decrease.visual)) return ChoiceType.Decrease;
         const border = board.getChildByName('Border')?.getComponent(Sprite)?.spriteFrame;
-        return same(border, this.increase.border) ? ChoiceType.Increase : ChoiceType.Decrease;
+        return !!border && !!this.increase.border && border.uuid === this.increase.border.uuid ? ChoiceType.Increase : ChoiceType.Decrease;
     }
 
     private passGate(index: number, playerX: number): void {
@@ -125,19 +141,22 @@ export class GateManager extends Component {
     }
 
     private applyStyle(board: Node, style: GateChoiceStyle): void {
-        const visual = board.getChildByName('Visual'), border = board.getChildByName('Border');
-        if (visual) {
-            const sp = visual.getComponent(Sprite);
-            if (sp) {
-                sp.spriteFrame = style.visual;
-                // Dat lai kich thuoc theo anh moi (RAW khong tu cap nhat khi doi anh trong editor)
-                const ut = visual.getComponent(UITransform);
-                if (ut && style.visual) ut.setContentSize(style.visual.originalSize);
-            }
-            visual.setScale(style.visualScale, style.visualScale, style.visualScale);
-        }
-        const bsp = border?.getComponent(Sprite);
+        this.setVisual(board, style.visual, style.visualScale);
+        const bsp = board.getChildByName('Border')?.getComponent(Sprite);
         if (bsp) bsp.spriteFrame = style.border;
+    }
+
+    private setVisual(board: Node, frame: SpriteFrame | null, scale: number): void {
+        const visual = board.getChildByName('Visual');
+        if (!visual) return;
+        const sp = visual.getComponent(Sprite);
+        if (sp) {
+            sp.spriteFrame = frame;
+            // Dat lai kich thuoc theo anh moi (RAW khong tu cap nhat khi doi anh trong editor)
+            const ut = visual.getComponent(UITransform);
+            if (ut && frame) ut.setContentSize(frame.originalSize);
+        }
+        visual.setScale(scale, scale, scale);
     }
 
     private clear(): void {

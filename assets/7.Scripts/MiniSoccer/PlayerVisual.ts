@@ -1,12 +1,12 @@
-import { _decorator, Animation, CCFloat, Color, Component, Sprite, Tween, tween, Vec3 } from 'cc';
-import { GameEvent, gameEvents, GameManager } from './GameManager';
+import { _decorator, Animation, CCFloat, Color, Component, Sprite, Tween, tween, UITransform, Vec3 } from 'cc';
+import { GameEvent, gameEvents, GameManager, setSpriteKeepHeight } from './GameManager';
 const { ccclass, property } = _decorator;
 
 const _white = new Color(255, 255, 255, 255);
 
 /**
  * Hinh cau thu theo level (PlayerVisual ben Unity). Gan tren node Character (goc o chan).
- * - Doi anh Body theo level, nhun Y lien tuc khi dang choi.
+ * - Doi anh Body theo level + nhan vat da chon (giu chieu cao Body), nhun Y lien tuc khi dang choi.
  * - Vua len max level: to x maxBoostScale + chay clip glow; het clip thi ve kich thuoc thuong.
  */
 @ccclass('PlayerVisual')
@@ -25,7 +25,7 @@ export class PlayerVisual extends Component {
     glowLayers: Sprite[] = [];
 
     @property({ type: [CCFloat], tooltip: 'He so scale theo level (phan tu 0 = Lv1)' })
-    levelScales: number[] = [1, 1.06, 1.12, 1.18, 1.24];
+    levelScales: number[] = [1, 1.08, 1.16, 1.24];
 
     @property({ type: CCFloat, tooltip: 'Chieu cao Y khi nhun xuong' })
     bounceY = 0.95;
@@ -43,19 +43,29 @@ export class PlayerVisual extends Component {
     private _level = 1;
     private _started = false;
     private _boosting = false;
+    private _bodyHeight = 512;
 
     onLoad() {
         this._defaultScale.set(this.node.scale);
+        this._bodyHeight = this.body?.getComponent(UITransform)?.height ?? this._bodyHeight;
         this.resetGlow();
-        this.setSprite(1);
+        gameEvents.on(GameEvent.CHARACTER_SELECTED, this.onCharacterSelected, this);
         gameEvents.on(GameEvent.START, this.onStart, this);
         gameEvents.on(GameEvent.LEVEL_CHANGED, this.onLevelChanged, this);
         this.animation?.on(Animation.EventType.FINISHED, this.onGlowFinished, this);
     }
 
+    start() {
+        this.setSprite(this._level);
+    }
+
     onDestroy() {
         gameEvents.targetOff(this);
         Tween.stopAllByTarget(this.node);
+    }
+
+    private onCharacterSelected(): void {
+        this.setSprite(this._level);
     }
 
     private onStart(): void {
@@ -76,7 +86,7 @@ export class PlayerVisual extends Component {
     private setSprite(level: number): void {
         const sprites = GameManager.Ins?.levelSprites ?? [];
         if (!this.body || sprites.length === 0) return;
-        this.body.spriteFrame = sprites[Math.min(sprites.length, Math.max(1, level)) - 1];
+        setSpriteKeepHeight(this.body, sprites[Math.min(sprites.length, Math.max(1, level)) - 1], this._bodyHeight);
     }
 
     private targetScale(out: Vec3): Vec3 {
